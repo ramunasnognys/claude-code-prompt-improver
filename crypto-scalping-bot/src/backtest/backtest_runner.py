@@ -5,6 +5,12 @@ Run backtests with the LSTM trading strategy.
 import pandas as pd
 import numpy as np
 from backtesting import Backtest
+from backtesting.lib import crossover
+try:
+    from backtesting.lib import FractionalBacktest
+except ImportError:
+    # Fallback if FractionalBacktest not available
+    FractionalBacktest = None
 from pathlib import Path
 import yaml
 import sys
@@ -27,13 +33,14 @@ class BacktestRunner:
         self.results = None
         self.bt = None
 
-    def prepare_data_for_backtest(self, df, predictions):
+    def prepare_data_for_backtest(self, df, predictions_norm, actuals_norm):
         """
         Prepare data in the format required by backtesting.py.
 
         Args:
             df (pd.DataFrame): OHLCV data with technical indicators
-            predictions (np.array): LSTM predictions
+            predictions_norm (np.array): LSTM predictions (normalized)
+            actuals_norm (np.array): Actual values (normalized)
 
         Returns:
             pd.DataFrame: Data formatted for backtesting.py
@@ -54,16 +61,11 @@ class BacktestRunner:
         bt_data['BB_Upper'] = df['bb_upper'].values
         bt_data['BB_Lower'] = df['bb_lower'].values
 
-        # Add predictions (align with dataframe length)
-        if len(predictions) < len(bt_data):
-            # Pad with NaN at the beginning
-            padded_predictions = np.full(len(bt_data), np.nan)
-            padded_predictions[-len(predictions):] = predictions
-            bt_data['Predicted_Price'] = padded_predictions
-        else:
-            bt_data['Predicted_Price'] = predictions[:len(bt_data)]
+        # Add normalized predictions and actuals
+        bt_data['Predicted_Norm'] = predictions_norm
+        bt_data['Actual_Norm'] = actuals_norm
 
-        # Drop rows with NaN predictions
+        # Drop rows with NaN
         bt_data = bt_data.dropna()
 
         return bt_data
@@ -81,7 +83,10 @@ class BacktestRunner:
         Returns:
             pd.Series: Backtest results
         """
-        self.bt = Backtest(
+        # Use FractionalBacktest if available for trading expensive assets like BTC
+        backtest_class = Backtest if FractionalBacktest is None else FractionalBacktest
+        
+        self.bt = backtest_class(
             data,
             strategy_class,
             cash=cash,
@@ -156,7 +161,9 @@ class BacktestRunner:
         print("\nOptimizing strategy parameters...")
         print("This may take several minutes...")
 
-        bt = Backtest(
+        backtest_class = Backtest if FractionalBacktest is None else FractionalBacktest
+        
+        bt = backtest_class(
             data,
             LSTMScalpingStrategy,
             cash=cash,
@@ -207,31 +214,51 @@ def main():
 
     predictions_df = pd.read_csv(predictions_path)
 
-    # 2. Load preprocessor and unscale predictions
+    # 2. Prepare predictions (use normalized values directly)
     print("\n2. Preparing predictions...")
-    preprocessor = DataPreprocessor()
-    preprocessor.load_scaler()
+    
+    # Use NORMALIZED predictions and actuals directly
+    # Percentage changes in normalized space ≈ percentage changes in real price space
+    predictions_normalized = predictions_df['predicted'].values
+    actuals_normalized = predictions_df['actual'].values
+    
+    print(f"\n{'='*60}")
+    print("PREDICTION ANALYSIS (Normalized Space)")
+    print(f"{'='*60}")
+    print(f"Predictions (normalized) sample: {predictions_normalized[:5]}")
+    print(f"Actuals (normalized) sample: {actuals_normalized[:5]}")
+    
+    # Calculate percentage differences in normalized space
+    pct_diffs = (predictions_normalized - actuals_normalized) / actuals_normalized * 100
+    print(f"\nPrediction errors (%):")
+    print(f"  Mean: {pct_diffs.mean():.4f}%")
+    print(f"  Std: {pct_diffs.std():.4f}%")
+    print(f"  Min: {pct_diffs.min():.4f}%")
+    print(f"  Max: {pct_diffs.max():.4f}%")
+    print(f"{'='*60}\n")
 
-    # Unscale predictions
-    predictions_unscaled = preprocessor.inverse_transform_predictions(
-        predictions_df['predicted'].values,
-        feature_idx=0  # Close price is first feature
-    )
-
-    # Align predictions with processed data
-    # Match by datetime
+    # Align predictions with processed data by datetime
     pred_dates = pd.to_datetime(predictions_df['datetime'])
-    pred_dict = dict(zip(pred_dates, predictions_unscaled))
+    
+    # Create dictionaries for both predictions and actuals (normalized)
+    pred_dict = dict(zip(pred_dates, predictions_normalized))
+    actual_dict = dict(zip(pred_dates, actuals_normalized))
 
-    # Add predictions to dataframe
-    df['predicted_price'] = df['datetime'].map(pred_dict)
+    # Add NORMALIZED predictions and actuals to dataframe
+    df['predicted_normalized'] = df['datetime'].map(pred_dict)
+    df['actual_normalized'] = df['datetime'].map(actual_dict)
 
     # 3. Prepare data for backtesting
     print("\n3. Preparing data for backtesting...")
     runner = BacktestRunner()
+    
+    # Filter to rows where we have predictions
+    df_with_preds = df[df['predicted_normalized'].notna()].copy()
+    
     bt_data = runner.prepare_data_for_backtest(
-        df[df['predicted_price'].notna()],
-        df[df['predicted_price'].notna()]['predicted_price'].values
+        df_with_preds,
+        df_with_preds['predicted_normalized'].values,
+        df_with_preds['actual_normalized'].values
     )
 
     print(f"Backtest data ready: {len(bt_data)} bars")

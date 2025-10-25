@@ -15,7 +15,10 @@ Get your crypto scalping bot up and running in minutes!
 ```bash
 cd crypto-scalping-bot
 pip install -r requirements.txt
+
+
 ```
+source /Users/ramunasnognys/Developer/workspace/prompt-improver/crypto-scalping-bot/venv/bin/activate
 
 This will install all required packages including:
 - CCXT (exchange connectivity)
@@ -236,10 +239,12 @@ The bot uses a multi-layered approach:
 
 ## Support and Resources
 
-- Check the main README.md for architecture details
-- Review the code comments for implementation details
-- See config/config.yaml for all configurable parameters
-- Review individual module files for specific functionality
+- **[Main README](README.md)** - Project overview and features
+- **[API Documentation](docs/api/)** - Detailed reference for all modules
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Solutions to common issues
+- **[Known Limitations](docs/LIMITATIONS.md)** - Important constraints and caveats
+- **[Architecture Decisions](docs/adr/)** - Design rationale and trade-offs
+- **Configuration**: See `config/config.yaml` for all parameters
 
 ## What's Next?
 

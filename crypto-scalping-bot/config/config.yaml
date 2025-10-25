@@ -1,58 +1,256 @@
-# Trading Bot Configuration
+# ============================================================
+# CRYPTO SCALPING BOT CONFIGURATION
+# ============================================================
+# This file controls all parameters for data fetching, model
+# training, and backtesting. Adjust values based on your
+# trading strategy, risk tolerance, and computational resources.
 
+# ============================================================
+# EXCHANGE CONFIGURATION
+# ============================================================
 exchange:
-  name: okx
-  sandbox: false
-  testnet: false
+  name: okx                  # Exchange name (okx, binance, etc.)
+                             # Must be supported by CCXT library
 
+  sandbox: false             # Use exchange testnet/sandbox?
+                             # true: Test with fake money (safe for development)
+                             # false: Use real exchange (for live data/trading)
+
+  testnet: false             # Alternative testnet flag
+                             # Implementation depends on exchange
+
+# ============================================================
+# TRADING PARAMETERS
+# Core settings for symbol, timeframe, and capital
+# ============================================================
 trading:
-  symbol: BTC/USDT:USDT  # Perpetual futures contract
-  timeframe: 1m          # 1-minute candles for scalping
-  initial_capital: 10000 # Starting capital in USDT
+  symbol: BTC/USDT:USDT      # Trading pair in CCXT format
+                             # Format: BASE/QUOTE:SETTLEMENT
+                             # BTC/USDT:USDT = BTC perpetual settled in USDT
+                             # Options: ETH/USDT:USDT, SOL/USDT:USDT, etc.
 
-  # Scalping parameters
-  max_position_size: 0.1   # Max 10% of capital per trade
-  leverage: 5              # Leverage for perp contracts
-  stop_loss_pct: 0.005     # 0.5% stop loss
-  take_profit_pct: 0.01    # 1% take profit
+  timeframe: 1m              # Candlestick timeframe for data and trading
+                             # Options: 1m, 5m, 15m, 1h, 4h, 1d
+                             # 1m = 1-minute candles (scalping)
+                             # Lower timeframes = more data, faster signals
+                             # Higher timeframes = less noise, slower signals
 
-  # Risk management
-  max_daily_loss: 0.05     # Stop trading if down 5% for the day
-  max_open_positions: 3
+  initial_capital: 10000     # Starting capital in USDT
+                             # Used for backtesting position sizing
+                             # Minimum: 100 (exchange minimums vary)
+                             # Recommended: 1000+ for meaningful results
 
+  # ============================================================
+  # SCALPING RISK MANAGEMENT
+  # Adjust these to match your risk tolerance
+  # ============================================================
+  max_position_size: 0.1     # Maximum % of capital per trade (0-1)
+                             # 0.1 = 10% max position size
+                             # Lower = more conservative, higher = aggressive
+                             # NOTE: Actual position size set in strategy classes
+
+  leverage: 5                # Leverage multiplier for perpetual futures
+                             # Range: 1-125 (exchange dependent)
+                             # Higher leverage = higher risk/reward
+                             # WARNING: Leverage >10x very risky
+
+  stop_loss_pct: 0.005       # Stop loss percentage (0.005 = 0.5%)
+                             # Distance from entry where loss is cut
+                             # Lower = tighter stops, more stopouts
+                             # Higher = more room, larger losses
+
+  take_profit_pct: 0.01      # Take profit percentage (0.01 = 1%)
+                             # Distance from entry where profit is taken
+                             # Should be > stop_loss_pct for positive expectancy
+                             # Common ratio: 2:1 (TP = 2x SL)
+
+  # ============================================================
+  # DAILY RISK LIMITS
+  # Circuit breakers to prevent catastrophic losses
+  # ============================================================
+  max_daily_loss: 0.05       # Max daily drawdown before stopping (0.05 = 5%)
+                             # If equity drops 5% in one day, stop trading
+                             # Prevents revenge trading and runaway losses
+
+  max_open_positions: 3      # Maximum concurrent positions
+                             # Limits exposure and margin usage
+                             # 1 = one trade at a time (simple)
+                             # 3+ = portfolio diversification
+
+# ============================================================
+# LSTM MODEL ARCHITECTURE
+# Neural network structure and training hyperparameters
+# ============================================================
 model:
-  type: lstm
-  lookback_periods: 60     # Use last 60 minutes of data
+  type: lstm                 # Model type (currently only LSTM supported)
 
-  # LSTM architecture
-  lstm_units: [64, 32]     # Two LSTM layers
-  dropout_rate: 0.2
+  lookback_periods: 60       # Number of historical periods to use for prediction
+                             # 60 = use last 60 candles to predict next one
+                             # For 1m timeframe: 60 = last hour of data
+                             # Higher = more context, slower training
+                             # Lower = faster, may miss patterns
 
-  # Training
-  epochs: 30
-  batch_size: 32
-  validation_split: 0.2
-  learning_rate: 0.001
+  # ============================================================
+  # LSTM LAYER CONFIGURATION
+  # Defines the neural network depth and complexity
+  # ============================================================
+  lstm_units: [64, 32]       # Number of units in each LSTM layer
+                             # [64, 32] = 2 layers: first with 64 units, second with 32
+                             # More layers = deeper model, captures complex patterns
+                             # More units = wider layers, more parameters
+                             # Tradeoff: accuracy vs overfitting vs training time
+                             # Examples:
+                             #   Simple: [32]
+                             #   Standard: [64, 32]
+                             #   Complex: [128, 64, 32]
 
-  # Features to use
-  features:
-    - close
-    - volume
-    - rsi_14
-    - macd
-    - bb_upper
-    - bb_lower
+  dropout_rate: 0.2          # Dropout probability for regularization (0-1)
+                             # 0.2 = randomly drop 20% of neurons during training
+                             # Prevents overfitting by forcing redundancy
+                             # Higher (0.3-0.5) = stronger regularization
+                             # Lower (0.1-0.2) = less regularization
+                             # 0 = no dropout (risk of overfitting)
 
+  # ============================================================
+  # TRAINING HYPERPARAMETERS
+  # Control the learning process
+  # ============================================================
+  epochs: 15                 # Maximum training iterations over full dataset
+                             # PHASE 1: Reduced from 30 to 15 for faster initial training
+                             # EarlyStopping may stop training before this
+                             # Typical range: 20-100
+
+  batch_size: 64             # Number of samples per gradient update
+                             # PHASE 1: Increased from 32 to 64 for faster training
+                             # 32 = process 32 sequences, then update weights
+                             # Smaller (16) = slower, more stable
+                             # Larger (64, 128) = faster, less stable
+                             # Must fit in GPU/CPU memory
+
+  validation_split: 0.2      # Fraction of data for validation (0-1)
+                             # 0.2 = use 20% for validation, 80% for training
+                             # Validation monitors overfitting during training
+                             # Typical: 0.15-0.25
+
+  learning_rate: 0.001       # Adam optimizer learning rate
+                             # Controls step size of weight updates
+                             # 0.001 = standard starting point
+                             # Lower (0.0001) = slower, more stable
+                             # Higher (0.01) = faster, may diverge
+                             # ReduceLROnPlateau automatically lowers this
+
+  # ============================================================
+  # FEATURE SELECTION
+  # Which technical indicators to use as model inputs
+  # ============================================================
+  features:                  # List of features for LSTM input
+    - close                  # Closing price (essential)
+    - volume                 # Trading volume (liquidity indicator)
+    - rsi_14                 # Relative Strength Index (momentum)
+    - macd                   # MACD line (trend direction)
+    - bb_upper               # Bollinger Band upper (volatility)
+    - bb_lower               # Bollinger Band lower (volatility)
+                             #
+                             # Adding more features:
+                             # - Can improve accuracy if informative
+                             # - Increases model complexity
+                             # - Requires more training data
+                             #
+                             # Available features (from preprocess.py):
+                             # - open, high, low, close, volume
+                             # - rsi_14
+                             # - macd, macd_signal, macd_diff
+                             # - bb_upper, bb_middle, bb_lower, bb_width
+                             # - price_change, volume_change
+                             # - hl_range
+                             # - sma_10, sma_30, ema_10
+                             # - volume_sma_20, volume_ratio
+
+# ============================================================
+# BACKTESTING CONFIGURATION
+# Historical simulation parameters
+# ============================================================
 backtesting:
-  start_date: "2024-01-01"
-  end_date: "2024-03-31"   # 3 months of data for faster testing
-  commission: 0.0004       # 0.04% taker fee on OKX
-  slippage: 0.0001         # 0.01% slippage estimate
+  start_date: "2024-03-16"   # Backtest start date (YYYY-MM-DD format)
+                             # PHASE 1.1: Changed from 2024-01-01 to prevent data leakage
+                             # This date MUST be after test split date (Mar 16)
+                             # Ensures backtest uses only out-of-sample data
 
+  end_date: "2024-03-31"     # Backtest end date (YYYY-MM-DD format)
+                             # 16 days of out-of-sample testing
+                             # This period was NOT seen during training
+                             # Must be >= start_date
+
+  commission: 0.0004         # Trading fees per trade (0.0004 = 0.04%)
+                             # OKX taker fee: 0.04% (0.0004)
+                             # maker fee: 0.02% (0.0002)
+                             # Binance: 0.04% taker, 0.02% maker
+                             # Use taker fees for market orders (conservative)
+                             # CRITICAL: Accurate fees crucial for realistic results
+
+  slippage: 0.0001           # Estimated price slippage (0.0001 = 0.01%)
+                             # Difference between expected and executed price
+                             # Higher for:
+                             #   - Larger position sizes
+                             #   - Lower liquidity pairs
+                             #   - Volatile markets
+                             # Conservative estimate: 0.01-0.05%
+
+# ============================================================
+# TECHNICAL INDICATOR PARAMETERS
+# Settings for indicator calculations in preprocess.py
+# ============================================================
 indicators:
-  rsi_period: 14
-  macd_fast: 12
-  macd_slow: 26
-  macd_signal: 9
-  bb_period: 20
-  bb_std: 2
+  # RSI (Relative Strength Index)
+  rsi_period: 14             # Number of periods for RSI calculation
+                             # 14 = standard setting
+                             # Shorter (7-10) = more sensitive, more signals
+                             # Longer (20-30) = smoother, fewer signals
+
+  # MACD (Moving Average Convergence Divergence)
+  macd_fast: 12              # Fast EMA period
+                             # Standard: 12
+  macd_slow: 26              # Slow EMA period
+                             # Standard: 26
+  macd_signal: 9             # Signal line EMA period
+                             # Standard: 9
+                             # Common combinations:
+                             #   Default: (12, 26, 9)
+                             #   Faster: (5, 13, 5)
+                             #   Slower: (19, 39, 9)
+
+  # Bollinger Bands
+  bb_period: 20              # Number of periods for moving average
+                             # 20 = standard setting (20-period SMA)
+  bb_std: 2                  # Number of standard deviations
+                             # 2 = standard (captures ~95% of price action)
+                             # Higher (2.5-3) = wider bands, fewer touches
+                             # Lower (1.5) = tighter bands, more touches
+
+# ============================================================
+# NOTES AND BEST PRACTICES
+# ============================================================
+#
+# RECOMMENDED WORKFLOW:
+# 1. Start with default parameters
+# 2. Fetch data: python -m src.data.fetch_data
+# 3. Train model: python -m src.models.lstm_model
+# 4. Backtest: python run_pipeline.py --skip-fetch --skip-train
+# 5. Analyze results in results/ directory
+# 6. Iterate: adjust params, retrain, backtest
+#
+# PARAMETER TUNING TIPS:
+# - Change one parameter at a time
+# - Document all changes and results
+# - Beware of overfitting to backtest period
+# - Test on out-of-sample data
+# - Consider walk-forward optimization
+#
+# COMMON ISSUES:
+# - No trades in backtest: Lower prediction_threshold in strategy
+# - Too many trades: Raise prediction_threshold
+# - Poor directional accuracy: Add features or retrain
+# - High drawdown: Tighten stop_loss_pct
+# - Low win rate: Check indicator confirmations
+#
+# ============================================================

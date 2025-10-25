@@ -13,13 +13,35 @@ Options:
 import sys
 import argparse
 from pathlib import Path
+from typing import Optional
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 
-def run_pipeline(skip_fetch=False, skip_train=False):
-    """Run the complete trading bot pipeline."""
+def run_pipeline(skip_fetch: bool = False, skip_train: bool = False) -> bool:
+    """
+    Execute complete end-to-end pipeline: fetch, preprocess, train, backtest.
+
+    Pipeline steps:
+        1. Fetch OHLCV data from OKX (if not skipped)
+        2. Add technical indicators and create sequences
+        3. Train LSTM model (if not skipped)
+        4. Run backtest with trained model and strategy
+        5. Generate performance reports and visualizations
+
+    Args:
+        skip_fetch: Use existing data files instead of fetching new data
+        skip_train: Use existing trained model instead of retraining
+
+    Returns:
+        True if pipeline completed successfully, False if any step failed
+
+    Example:
+        >>> success = run_pipeline(skip_fetch=True, skip_train=False)
+        >>> if success:
+        ...     print("Check results/ directory for backtest output")
+    """
     print("=" * 70)
     print("CRYPTO SCALPING BOT - COMPLETE PIPELINE")
     print("=" * 70)
@@ -70,7 +92,7 @@ def run_pipeline(skip_fetch=False, skip_train=False):
     print("STEP 4: RUNNING BACKTEST")
     print("=" * 70)
     try:
-        from backtesting.backtest_runner import main as backtest_main
+        from backtest.backtest_runner import main as backtest_main
         backtest_main()
     except Exception as e:
         print(f"Error running backtest: {e}")
@@ -94,8 +116,16 @@ def run_pipeline(skip_fetch=False, skip_train=False):
     return True
 
 
-def main():
-    """Parse arguments and run pipeline."""
+def main() -> None:
+    """
+    CLI entry point: parse arguments and execute pipeline.
+
+    Usage:
+        python run_pipeline.py                    # Full pipeline
+        python run_pipeline.py --skip-fetch       # Use existing data
+        python run_pipeline.py --skip-train       # Use existing model
+        python run_pipeline.py --skip-fetch --skip-train  # Only backtest
+    """
     parser = argparse.ArgumentParser(
         description='Run the complete crypto scalping bot pipeline'
     )

@@ -11,28 +11,74 @@ import yaml
 import pickle
 from pathlib import Path
 import matplotlib.pyplot as plt
+from typing import Optional, Tuple, Dict, Any
 
 
 class LSTMPricePredictor:
-    """LSTM neural network for predicting crypto prices."""
+    """
+    LSTM neural network for predicting cryptocurrency prices.
 
-    def __init__(self, config_path='config/config.yaml'):
-        """Initialize the LSTM model with configuration."""
+    Implements a multi-layer LSTM architecture with dropout regularization,
+    early stopping, learning rate reduction, and model checkpointing.
+
+    Architecture:
+        - Input: (timesteps, features) sequences
+        - LSTM layers with configurable units (e.g., [64, 32])
+        - Dropout layers for regularization
+        - Dense output layer (single price prediction)
+        - Optimizer: Adam with configurable learning rate
+        - Loss: MSE (Mean Squared Error)
+
+    Example:
+        >>> model = LSTMPricePredictor('config/config.yaml')
+        >>> history = model.train(X_train, y_train, X_val, y_val)
+        >>> predictions = model.predict(X_test)
+        >>> metrics = model.evaluate(X_test, y_test)
+        >>> model.save_model('models/lstm_model.keras')
+    """
+
+    def __init__(self, config_path: str = 'config/config.yaml') -> None:
+        """
+        Initialize LSTM model with configuration.
+
+        Args:
+            config_path: Path to YAML config with model architecture and training params
+
+        Attributes:
+            config: Loaded configuration dictionary
+            model: Keras Sequential model (None until build_model called)
+            history: Training history (None until train called)
+        """
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
         self.model = None
         self.history = None
 
-    def build_model(self, input_shape):
+    def build_model(self, input_shape: Tuple[int, int]) -> keras.Model:
         """
-        Build LSTM model architecture.
+        Build and compile stacked LSTM model architecture.
+
+        Creates sequential LSTM layers based on config, with dropout between layers.
+        The return_sequences parameter is automatically set to maintain temporal
+        dimension for all but the last LSTM layer.
 
         Args:
-            input_shape (tuple): Shape of input data (timesteps, features)
+            input_shape: Tuple of (timesteps, features), e.g., (60, 6)
 
         Returns:
-            keras.Model: Compiled LSTM model
+            Compiled Keras model ready for training
+
+        Example:
+            >>> model_obj = LSTMPricePredictor()
+            >>> model = model_obj.build_model((60, 6))  # 60 timesteps, 6 features
+            >>> model.summary()  # View architecture
+
+        Note:
+            Config parameters used:
+                - lstm_units: List of units per layer, e.g., [64, 32]
+                - dropout_rate: Dropout probability (0-1)
+                - learning_rate: Adam optimizer learning rate
         """
         lstm_units = self.config['model']['lstm_units']
         dropout_rate = self.config['model']['dropout_rate']
@@ -41,15 +87,21 @@ class LSTMPricePredictor:
         model = keras.Sequential()
 
         # First LSTM layer
+        # return_sequences=True preserves temporal dimension for next LSTM layer
+        # Only set to False for the last LSTM layer before Dense output
         model.add(layers.LSTM(
             lstm_units[0],
-            return_sequences=True if len(lstm_units) > 1 else False,
+            return_sequences=True if len(lstm_units) > 1 else False,  # True if more layers follow
             input_shape=input_shape
         ))
         model.add(layers.Dropout(dropout_rate))
 
         # Additional LSTM layers
+        # Enumerate over remaining layers (skip first, already added)
         for i, units in enumerate(lstm_units[1:]):
+            # return_seq: True for all but last LSTM layer
+            # Example: [64, 32] -> i=0 is last, return_seq=False
+            # Example: [64, 32, 16] -> i=0,1 have return_seq=True,False
             return_seq = i < len(lstm_units) - 2
             model.add(layers.LSTM(units, return_sequences=return_seq))
             model.add(layers.Dropout(dropout_rate))
@@ -72,18 +124,32 @@ class LSTMPricePredictor:
 
         return model
 
-    def train(self, X_train, y_train, X_val=None, y_val=None):
+    def train(self, X_train: np.ndarray, y_train: np.ndarray, X_val: Optional[np.ndarray] = None, y_val: Optional[np.ndarray] = None) -> callbacks.History:
         """
-        Train the LSTM model.
+        Train the LSTM model with automatic callbacks for optimization and checkpointing.
+
+        Implements:
+            - EarlyStopping: Stops training if validation loss doesn't improve (patience=10)
+            - ReduceLROnPlateau: Reduces learning rate by 0.5 if loss plateaus (patience=5)
+            - ModelCheckpoint: Saves best model based on validation/training loss
 
         Args:
-            X_train (np.array): Training sequences
-            y_train (np.array): Training targets
-            X_val (np.array): Validation sequences (optional)
-            y_val (np.array): Validation targets (optional)
+            X_train: Training sequences, shape (n_samples, timesteps, features)
+            y_train: Training targets, shape (n_samples,)
+            X_val: Validation sequences (optional). If None, monitors training loss
+            y_val: Validation targets (optional)
 
         Returns:
-            keras.callbacks.History: Training history
+            History object with training metrics (loss, MAE, val_loss, val_mae)
+
+        Example:
+            >>> history = model.train(X_train, y_train, X_val, y_val)
+            >>> print(f"Final loss: {history.history['loss'][-1]}")
+            >>> model.plot_training_history()
+
+        Note:
+            Best model weights are automatically restored after training.
+            Checkpoints saved to models/checkpoints/best_model.keras
         """
         if self.model is None:
             input_shape = (X_train.shape[1], X_train.shape[2])
@@ -135,7 +201,7 @@ class LSTMPricePredictor:
 
         return self.history
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Make predictions with the trained model.
 
@@ -150,16 +216,32 @@ class LSTMPricePredictor:
 
         return self.model.predict(X, verbose=0)
 
-    def evaluate(self, X_test, y_test):
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """
-        Evaluate model performance on test data.
+        Evaluate model performance with comprehensive metrics.
+
+        Calculates regression metrics (MSE, MAE, RMSE) plus directional accuracy
+        to measure how well the model predicts price movement direction.
 
         Args:
-            X_test (np.array): Test sequences
-            y_test (np.array): Test targets
+            X_test: Test sequences, shape (n_samples, timesteps, features)
+            y_test: True target values, shape (n_samples,)
 
         Returns:
-            dict: Evaluation metrics
+            Dictionary with metrics:
+                - mse: Mean Squared Error
+                - mae: Mean Absolute Error
+                - rmse: Root Mean Squared Error
+                - direction_accuracy: % of correct up/down predictions (0-1)
+
+        Example:
+            >>> metrics = model.evaluate(X_test, y_test)
+            >>> print(f"RMSE: {metrics['rmse']:.4f}")
+            >>> print(f"Direction accuracy: {metrics['direction_accuracy']*100:.2f}%")
+
+        Note:
+            Direction accuracy measures if predicted price changes match actual
+            changes (ignoring magnitude). Critical for trading strategies.
         """
         predictions = self.predict(X_test)
 
@@ -167,10 +249,13 @@ class LSTMPricePredictor:
         mae = np.mean(np.abs(predictions.flatten() - y_test))
         rmse = np.sqrt(mse)
 
-        # Direction accuracy (did we predict up/down correctly?)
-        actual_direction = np.sign(np.diff(y_test))
-        pred_direction = np.sign(np.diff(predictions.flatten()))
-        direction_accuracy = np.mean(actual_direction == pred_direction)
+        # Direction accuracy: did we predict up/down movement correctly?
+        # np.diff() calculates consecutive differences: [a,b,c] -> [b-a, c-b]
+        # np.sign() converts to direction: positive->1, negative->-1, zero->0
+        # Compare predicted direction vs actual direction for each timestep
+        actual_direction = np.sign(np.diff(y_test))  # True price movement direction
+        pred_direction = np.sign(np.diff(predictions.flatten()))  # Predicted direction
+        direction_accuracy = np.mean(actual_direction == pred_direction)  # % correct
 
         metrics = {
             'mse': mse,
@@ -185,7 +270,7 @@ class LSTMPricePredictor:
 
         return metrics
 
-    def plot_training_history(self, save_path='models/training_history.png'):
+    def plot_training_history(self, save_path: str = 'models/training_history.png') -> None:
         """Plot training and validation loss."""
         if self.history is None:
             print("No training history available.")
@@ -218,20 +303,25 @@ class LSTMPricePredictor:
         print(f"Training history plot saved to {save_path}")
         plt.close()
 
-    def save_model(self, filepath='models/lstm_model.keras'):
+    def save_model(self, filepath: str = 'models/lstm_model.keras') -> None:
         """Save the trained model."""
         Path(filepath).parent.mkdir(exist_ok=True)
         self.model.save(filepath)
         print(f"Model saved to {filepath}")
 
-    def load_model(self, filepath='models/lstm_model.keras'):
+    def load_model(self, filepath: str = 'models/lstm_model.keras') -> None:
         """Load a trained model."""
         self.model = keras.models.load_model(filepath)
         print(f"Model loaded from {filepath}")
 
 
-def main():
-    """Train the LSTM model."""
+def main() -> None:
+    """
+    Complete LSTM training pipeline: load data, preprocess, train, evaluate, save.
+
+    Performs 70/15/15 train/val/test split, trains model, evaluates performance,
+    plots training history, and saves model + predictions.
+    """
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent.parent))
@@ -258,23 +348,43 @@ def main():
     X, y, indices = preprocessor.create_sequences(df_processed, lookback=60)
     preprocessor.save_scaler()
 
-    # Split data: 70% train, 15% validation, 15% test
-    train_size = int(len(X) * 0.7)
-    val_size = int(len(X) * 0.15)
-
-    X_train = X[:train_size]
-    y_train = y[:train_size]
-
-    X_val = X[train_size:train_size + val_size]
-    y_val = y[train_size:train_size + val_size]
-
-    X_test = X[train_size + val_size:]
-    y_test = y[train_size + val_size:]
-
-    print(f"\nData split:")
-    print(f"Training: {len(X_train)} samples")
-    print(f"Validation: {len(X_val)} samples")
-    print(f"Test: {len(X_test)} samples")
+    # DATE-BASED SPLIT TO PREVENT DATA LEAKAGE (Phase 1.1)
+    # Train: Jan 1 - Feb 28, 2024
+    # Validation: Mar 1 - Mar 15, 2024
+    # Test: Mar 16 - Mar 31, 2024 (will be used for backtesting)
+    
+    train_end = pd.Timestamp('2024-02-28 23:59:59')
+    val_end = pd.Timestamp('2024-03-15 23:59:59')
+    
+    # Get datetime array for indices
+    datetime_array = df_processed['datetime'].iloc[indices].values
+    datetime_array = pd.to_datetime(datetime_array)
+    
+    # Create masks for each split
+    train_mask = datetime_array <= train_end
+    val_mask = (datetime_array > train_end) & (datetime_array <= val_end)
+    test_mask = datetime_array > val_end
+    
+    # Split data based on dates
+    X_train = X[train_mask]
+    y_train = y[train_mask]
+    
+    X_val = X[val_mask]
+    y_val = y[val_mask]
+    
+    X_test = X[test_mask]
+    y_test = y[test_mask]
+    
+    # Print split information with dates
+    print(f"\n{'='*70}")
+    print("DATA SPLIT (Date-Based - No Data Leakage)")
+    print(f"{'='*70}")
+    print(f"Training:   {len(X_train):6d} samples | {datetime_array[train_mask].min()} to {datetime_array[train_mask].max()}")
+    print(f"Validation: {len(X_val):6d} samples | {datetime_array[val_mask].min()} to {datetime_array[val_mask].max()}")
+    print(f"Test:       {len(X_test):6d} samples | {datetime_array[test_mask].min()} to {datetime_array[test_mask].max()}")
+    print(f"{'='*70}")
+    print("⚠️  IMPORTANT: Test set is completely unseen and will be used for backtesting")
+    print(f"{'='*70}\n")
 
     # Train model
     model = LSTMPricePredictor()
@@ -290,17 +400,21 @@ def main():
     # Save model
     model.save_model()
 
-    # Save predictions for analysis
+    # Save predictions for analysis (only test set for backtesting)
     test_predictions = model.predict(X_test)
+    test_datetimes = datetime_array[test_mask]
+    
     results_df = pd.DataFrame({
         'actual': y_test,
         'predicted': test_predictions.flatten(),
-        'datetime': df['datetime'].iloc[indices[train_size + val_size:]]
+        'datetime': test_datetimes
     })
 
     results_path = data_dir / 'predictions.csv'
     results_df.to_csv(results_path, index=False)
     print(f"\nPredictions saved to {results_path}")
+    print(f"⚠️  Predictions are for TEST SET ONLY (Mar 16-31, 2024)")
+    print(f"   These will be used for out-of-sample backtesting.")
 
     print("\n=== Training Complete ===")
     print("Next step: Run backtesting with the trained model")

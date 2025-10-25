@@ -74,6 +74,24 @@ The bot uses a multi-step approach:
 5. **Risk Management**: Applies position sizing, stop-loss, and take-profit rules
 6. **Execution**: Simulates trades with realistic fees and slippage
 
+## Documentation
+
+### Quick Start
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to get up and running
+
+### API Reference
+- **[Data Module](docs/api/data-module.md)** - Data fetching and preprocessing
+- **[Models Module](docs/api/models-module.md)** - LSTM neural network
+- **[Strategies Module](docs/api/strategies-module.md)** - Trading strategies
+- **[Backtest Module](docs/api/backtest-module.md)** - Backtesting and analysis
+
+### Architecture
+- **[Architecture Decision Records](docs/adr/)** - Key design decisions and rationale
+
+### Reference
+- **[Known Limitations](docs/LIMITATIONS.md)** - Trading, technical, and architectural constraints
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
 ## Risk Warning
 
 This is experimental software for educational and research purposes. Cryptocurrency trading involves substantial risk of loss. Never trade with money you cannot afford to lose. Always test thoroughly with paper trading before considering live deployment.

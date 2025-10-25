@@ -11,28 +11,63 @@ import yaml
 from sklearn.preprocessing import MinMaxScaler
 import pickle
 from pathlib import Path
+from typing import Tuple, List
 
 
 class DataPreprocessor:
-    """Preprocess data and engineer features for the LSTM model."""
+    """
+    Preprocess OHLCV data and engineer technical indicator features for LSTM training.
 
-    def __init__(self, config_path='config/config.yaml'):
-        """Initialize preprocessor with configuration."""
+    Handles technical indicator calculation, feature scaling, sequence creation,
+    and inverse transformations for prediction interpretation.
+
+    Example:
+        >>> preprocessor = DataPreprocessor()
+        >>> df_with_indicators = preprocessor.add_technical_indicators(raw_df)
+        >>> X, y, indices = preprocessor.create_sequences(df_with_indicators, lookback=60)
+        >>> preprocessor.save_scaler('data/scaler.pkl')
+    """
+
+    def __init__(self, config_path: str = 'config/config.yaml') -> None:
+        """
+        Initialize preprocessor with configuration.
+
+        Args:
+            config_path: Path to YAML config file with indicator parameters and features list
+
+        Attributes:
+            scaler: MinMaxScaler for normalizing features to [0, 1]
+            feature_columns: List of feature names used for training
+        """
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
         self.scaler = MinMaxScaler()
         self.feature_columns = []
 
-    def add_technical_indicators(self, df):
+    def add_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add technical indicators to the dataframe.
+        Calculate and add technical indicators to OHLCV DataFrame.
+
+        Adds momentum (RSI), trend (MACD, SMA, EMA), volatility (Bollinger Bands),
+        and derived features (price changes, volume ratios).
 
         Args:
-            df (pd.DataFrame): OHLCV data
+            df: Raw OHLCV DataFrame with columns: open, high, low, close, volume
 
         Returns:
-            pd.DataFrame: Data with technical indicators
+            DataFrame with added features:
+                - rsi_14: Relative Strength Index
+                - macd, macd_signal, macd_diff: MACD indicators
+                - bb_upper, bb_middle, bb_lower, bb_width: Bollinger Bands
+                - price_change, volume_change: Percentage changes
+                - hl_range: High-low range normalized by close
+                - sma_10, sma_30, ema_10: Moving averages
+                - volume_sma_20, volume_ratio: Volume indicators
+
+        Example:
+            >>> df_features = preprocessor.add_technical_indicators(raw_df)
+            >>> print(df_features.columns)  # Shows all original + technical indicators
         """
         df = df.copy()
 
@@ -86,17 +121,32 @@ class DataPreprocessor:
 
         return df
 
-    def create_sequences(self, df, lookback=60, target_col='close'):
+    def create_sequences(self, df: pd.DataFrame, lookback: int = 60, target_col: str = 'close') -> Tuple[np.ndarray, np.ndarray, pd.Index]:
         """
-        Create sequences for LSTM training.
+        Create 3D sequences for LSTM input from time series data.
+
+        Applies MinMaxScaler to normalize features, then creates sliding window sequences
+        where each X[i] contains lookback timesteps of features, and y[i] is the target value.
 
         Args:
-            df (pd.DataFrame): Preprocessed data with features
-            lookback (int): Number of time steps to look back
-            target_col (str): Column to predict
+            df: DataFrame with technical indicators (output of add_technical_indicators)
+            lookback: Number of past timesteps in each sequence (window size)
+            target_col: Feature to predict (typically 'close' price)
 
         Returns:
-            tuple: (X, y) where X is input sequences and y is targets
+            Tuple containing:
+                - X: Input sequences, shape (num_sequences, lookback, num_features)
+                - y: Target values, shape (num_sequences,) - scaled values
+                - indices: Original DataFrame indices for alignment
+
+        Example:
+            >>> X, y, idx = preprocessor.create_sequences(df, lookback=60)
+            >>> print(X.shape)  # (n_samples, 60, 6) if 6 features
+            >>> print(y.shape)  # (n_samples,)
+
+        Note:
+            Features are scaled using MinMaxScaler. Call save_scaler() to persist
+            the scaler for inverse transforming predictions later.
         """
         # Select feature columns based on config
         feature_names = self.config['model']['features']
@@ -118,12 +168,18 @@ class DataPreprocessor:
         # Normalize features
         features_scaled = self.scaler.fit_transform(features)
 
-        # Create sequences
+        # Create sliding window sequences for LSTM
+        # Each X[i] contains lookback timesteps of all features
+        # Each y[i] is the target value at timestep i
         X, y = [], []
 
         for i in range(lookback, len(features_scaled)):
+            # Sequence: features from [i-lookback] to [i-1] (lookback timesteps)
+            # Example: lookback=60, i=100 -> features[40:100]
             X.append(features_scaled[i - lookback:i])
-            # Predict next period's close price (scaled)
+
+            # Target: predict the target_col value at timestep i
+            # Extract scaled close price at position i
             y.append(features_scaled[i, self.feature_columns.index(target_col)])
 
         X = np.array(X)
@@ -133,47 +189,72 @@ class DataPreprocessor:
 
         return X, y, df.index[lookback:]
 
-    def inverse_transform_predictions(self, predictions, feature_idx=0):
+    def inverse_transform_predictions(self, predictions: np.ndarray, feature_idx: int = 0) -> np.ndarray:
         """
-        Convert scaled predictions back to original scale.
+        Convert scaled LSTM predictions back to original price scale.
+
+        Since MinMaxScaler was fit on multi-feature data, we need to reconstruct
+        a dummy array with the same shape to inverse transform correctly.
 
         Args:
-            predictions (np.array): Scaled predictions
-            feature_idx (int): Index of the predicted feature
+            predictions: Scaled predictions from model, shape (n_samples,) or (n_samples, 1)
+            feature_idx: Index of predicted feature in feature_columns list (0 for 'close')
 
         Returns:
-            np.array: Unscaled predictions
+            Unscaled predictions in original price units
+
+        Example:
+            >>> predictions_scaled = model.predict(X_test)  # Scaled [0,1]
+            >>> predictions_real = preprocessor.inverse_transform_predictions(predictions_scaled)
+            >>> print(predictions_real)  # Actual prices like [45000.5, 45100.2, ...]
         """
-        # Create dummy array with same shape as original features
+        # MinMaxScaler was fit on multi-feature array shape (n_samples, n_features)
+        # To inverse transform single feature, reconstruct dummy array with same shape
+        # Fill target feature column with predictions, rest with zeros
         n_features = len(self.feature_columns)
         dummy = np.zeros((len(predictions), n_features))
-        dummy[:, feature_idx] = predictions.flatten()
+        dummy[:, feature_idx] = predictions.flatten()  # Place predictions in correct column
 
-        # Inverse transform
+        # Debug: Verify feature order and scaling
+        print(f"\nInverse transform debug:")
+        print(f"  Feature columns: {self.feature_columns}")
+        print(f"  Using feature_idx: {feature_idx} = '{self.feature_columns[feature_idx]}'")
+        print(f"  Input (scaled) sample: {predictions[:3]}")
+
+        # Inverse transform the dummy array
+        # Only the target column will be correctly scaled; others are meaningless
         unscaled = self.scaler.inverse_transform(dummy)
+
+        print(f"  Output (unscaled) sample: {unscaled[:3, feature_idx]}")
 
         return unscaled[:, feature_idx]
 
-    def save_scaler(self, filepath='data/scaler.pkl'):
+    def save_scaler(self, filepath: str = 'data/scaler.pkl') -> None:
         """Save the fitted scaler for later use."""
         Path(filepath).parent.mkdir(exist_ok=True)
         with open(filepath, 'wb') as f:
             pickle.dump(self.scaler, f)
         print(f"Scaler saved to {filepath}")
 
-    def load_scaler(self, filepath='data/scaler.pkl'):
+    def load_scaler(self, filepath: str = 'data/scaler.pkl') -> None:
         """Load a previously fitted scaler."""
         with open(filepath, 'rb') as f:
             self.scaler = pickle.load(f)
+        # Restore feature columns from config
+        self.feature_columns = self.config['model']['features']
         print(f"Scaler loaded from {filepath}")
 
 
-def main():
-    """Test preprocessing pipeline."""
+def main() -> None:
+    """
+    Test preprocessing pipeline on most recent OHLCV data file.
+
+    Loads latest CSV, adds indicators, creates sequences, saves scaler and processed data.
+    """
     import sys
     from pathlib import Path
 
-    # Load the most recent data file
+    # Load the most recent raw OHLCV data file
     data_dir = Path('data')
     csv_files = list(data_dir.glob('*.csv'))
 
@@ -181,8 +262,30 @@ def main():
         print("No data files found. Run fetch_data.py first.")
         sys.exit(1)
 
-    # Get the most recent file
-    latest_file = max(csv_files, key=lambda p: p.stat().st_mtime)
+    # Filter for raw OHLCV data files (exclude processed outputs)
+    exclude_files = {'predictions.csv', 'processed_data.csv'}
+    raw_data_files = []
+
+    for csv_file in csv_files:
+        if csv_file.name in exclude_files:
+            continue
+        
+        # Quick check: raw OHLCV data should have these columns
+        try:
+            temp_df = pd.read_csv(csv_file, nrows=1)
+            required_cols = ['open', 'high', 'low', 'close', 'volume']
+            if all(col in temp_df.columns for col in required_cols):
+                raw_data_files.append(csv_file)
+        except Exception:
+            continue
+
+    if not raw_data_files:
+        print("No raw OHLCV data files found. Run fetch_data.py first.")
+        print("Expected columns: open, high, low, close, volume, datetime")
+        sys.exit(1)
+
+    # Get the most recent raw data file
+    latest_file = max(raw_data_files, key=lambda p: p.stat().st_mtime)
     print(f"Loading data from {latest_file}")
 
     df = pd.read_csv(latest_file)

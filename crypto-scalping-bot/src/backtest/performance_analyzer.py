@@ -8,31 +8,69 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 import json
+from typing import Optional, Dict, Any
 
 
 class PerformanceAnalyzer:
-    """Analyze and visualize trading performance."""
+    """
+    Comprehensive trading performance analysis and visualization.
 
-    def __init__(self, trades_df=None, equity_curve=None):
+    Calculates risk/return metrics, generates plots, and produces detailed reports
+    for backtest results evaluation.
+
+    Metrics calculated:
+        - Win rate, profit factor, Sharpe ratio
+        - Drawdown analysis (max, average)
+        - Trade statistics (duration, streaks)
+        - Returns distribution and normality
+
+    Visualizations:
+        - Equity curve and drawdown chart
+        - Trade PnL distribution and cumulative PnL
+        - Hourly performance analysis
+        - Rolling win rate
+        - Returns distribution with Q-Q plot
+
+    Example:
+        >>> analyzer = PerformanceAnalyzer(trades_df, equity_series)
+        >>> metrics = analyzer.calculate_metrics(initial_capital=10000)
+        >>> analyzer.plot_equity_curve()
+        >>> analyzer.generate_report()
+    """
+
+    def __init__(self, trades_df: Optional[pd.DataFrame] = None, equity_curve: Optional[pd.Series] = None) -> None:
         """
-        Initialize analyzer with trade data.
+        Initialize analyzer with backtest data.
 
         Args:
-            trades_df (pd.DataFrame): DataFrame of individual trades
-            equity_curve (pd.Series): Time series of equity values
+            trades_df: DataFrame with trade-level data (PnL, EntryTime, ExitTime, etc.)
+            equity_curve: Time series of portfolio equity over backtest period
         """
         self.trades_df = trades_df
         self.equity_curve = equity_curve
 
-    def calculate_metrics(self, initial_capital=10000):
+    def calculate_metrics(self, initial_capital: float = 10000) -> Dict[str, Any]:
         """
-        Calculate comprehensive performance metrics.
+        Calculate comprehensive trading performance metrics.
 
         Args:
-            initial_capital (float): Starting capital
+            initial_capital: Starting portfolio value for return calculations
 
         Returns:
-            dict: Performance metrics
+            Dictionary containing:
+                - total_trades, winning_trades, losing_trades, win_rate_pct
+                - total_pnl, total_return_pct
+                - avg_win, avg_loss, largest_win, largest_loss
+                - profit_factor: (avg_win * wins) / abs(avg_loss * losses)
+                - sharpe_ratio: Annualized risk-adjusted return
+                - max_drawdown_pct, avg_drawdown_pct
+                - max_consecutive_wins, max_consecutive_losses
+                - avg/max/min_trade_duration
+
+        Example:
+            >>> metrics = analyzer.calculate_metrics(10000)
+            >>> print(f"Win rate: {metrics['win_rate_pct']:.2f}%")
+            >>> print(f"Sharpe: {metrics['sharpe_ratio']:.2f}")
         """
         if self.trades_df is None or len(self.trades_df) == 0:
             return {}
@@ -80,11 +118,18 @@ class PerformanceAnalyzer:
         else:
             avg_duration = max_duration = min_duration = None
 
-        # Consecutive wins/losses
-        trades['Win'] = trades['PnL'] > 0
+        # Consecutive wins/losses streak detection
+        trades['Win'] = trades['PnL'] > 0  # Boolean: True for wins
+
+        # Create streak groups: each time Win changes (True->False or False->True), new group
+        # .ne() compares each value to previous: [T,T,F,F,T] -> [NaN,F,T,F,T]
+        # .cumsum() increments counter at each True: [0,0,1,1,2]
         trades['Streak'] = trades['Win'].ne(trades['Win'].shift()).cumsum()
-        win_streaks = trades[trades['Win']].groupby('Streak').size()
-        loss_streaks = trades[~trades['Win']].groupby('Streak').size()
+
+        # Group by streak ID and count trades in each streak
+        win_streaks = trades[trades['Win']].groupby('Streak').size()  # Winning streaks
+        loss_streaks = trades[~trades['Win']].groupby('Streak').size()  # Losing streaks
+
         max_consecutive_wins = win_streaks.max() if len(win_streaks) > 0 else 0
         max_consecutive_losses = loss_streaks.max() if len(loss_streaks) > 0 else 0
 
@@ -114,7 +159,7 @@ class PerformanceAnalyzer:
 
         return metrics
 
-    def plot_equity_curve(self, save_path='results/equity_curve.png'):
+    def plot_equity_curve(self, save_path: str = 'results/equity_curve.png') -> None:
         """Plot equity curve over time."""
         if self.equity_curve is None:
             print("No equity curve data available.")
@@ -149,7 +194,7 @@ class PerformanceAnalyzer:
         print(f"Equity curve plot saved to {save_path}")
         plt.close()
 
-    def plot_trade_analysis(self, save_path='results/trade_analysis.png'):
+    def plot_trade_analysis(self, save_path: str = 'results/trade_analysis.png') -> None:
         """Plot trade distribution and analysis."""
         if self.trades_df is None or len(self.trades_df) == 0:
             print("No trade data available.")
@@ -213,7 +258,7 @@ class PerformanceAnalyzer:
         print(f"Trade analysis plot saved to {save_path}")
         plt.close()
 
-    def plot_returns_distribution(self, save_path='results/returns_distribution.png'):
+    def plot_returns_distribution(self, save_path: str = 'results/returns_distribution.png') -> None:
         """Plot returns distribution and statistics."""
         if self.trades_df is None or len(self.trades_df) == 0:
             print("No trade data available.")
@@ -253,7 +298,7 @@ class PerformanceAnalyzer:
         print(f"Returns distribution plot saved to {save_path}")
         plt.close()
 
-    def generate_report(self, save_path='results/performance_report.json', initial_capital=10000):
+    def generate_report(self, save_path: str = 'results/performance_report.json', initial_capital: float = 10000) -> Dict[str, Any]:
         """Generate comprehensive performance report."""
         metrics = self.calculate_metrics(initial_capital)
 
@@ -290,8 +335,12 @@ class PerformanceAnalyzer:
         return metrics
 
 
-def main():
-    """Generate performance analysis from backtest results."""
+def main() -> None:
+    """
+    Load backtest results and generate complete performance analysis.
+
+    Reads from results/backtest_results.csv and produces visualizations.
+    """
     from pathlib import Path
     import sys
 
