@@ -14,6 +14,36 @@ import matplotlib.pyplot as plt
 from typing import Optional, Tuple, Dict, Any
 
 
+class BiasCorrection:
+    """
+    PHASE 3.1: Correct systematic prediction bias.
+    
+    Learns bias and scale from validation set, applies correction to predictions.
+    """
+    
+    def __init__(self):
+        self.bias = 0.0
+        self.scale = 1.0
+        
+    def fit(self, predictions: np.ndarray, actuals: np.ndarray) -> None:
+        """Calculate bias and scale from validation set."""
+        error = predictions - actuals
+        self.bias = np.mean(error)
+        
+        # Scale correction: match prediction std to actual std
+        pred_std = np.std(predictions)
+        actual_std = np.std(actuals)
+        self.scale = actual_std / pred_std if pred_std > 0 else 1.0
+        
+        print(f"\nBias correction fitted:")
+        print(f"  Mean bias: {self.bias:.6f}")
+        print(f"  Scale factor: {self.scale:.6f}")
+        
+    def correct(self, predictions: np.ndarray) -> np.ndarray:
+        """Apply bias correction to predictions."""
+        return (predictions - self.bias) * self.scale
+
+
 class LSTMPricePredictor:
     """
     LSTM neural network for predicting cryptocurrency prices.
@@ -48,12 +78,14 @@ class LSTMPricePredictor:
             config: Loaded configuration dictionary
             model: Keras Sequential model (None until build_model called)
             history: Training history (None until train called)
+            bias_corrector: PHASE 3.1: Bias correction for predictions
         """
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
         self.model = None
         self.history = None
+        self.bias_corrector = BiasCorrection()  # PHASE 3.1
 
     def build_model(self, input_shape: Tuple[int, int]) -> keras.Model:
         """
@@ -86,28 +118,30 @@ class LSTMPricePredictor:
 
         model = keras.Sequential()
 
+        # PHASE 3.1: Enhanced architecture with batch normalization
         # First LSTM layer
-        # return_sequences=True preserves temporal dimension for next LSTM layer
-        # Only set to False for the last LSTM layer before Dense output
         model.add(layers.LSTM(
             lstm_units[0],
-            return_sequences=True if len(lstm_units) > 1 else False,  # True if more layers follow
+            return_sequences=True if len(lstm_units) > 1 else False,
             input_shape=input_shape
         ))
+        model.add(layers.BatchNormalization())  # PHASE 3.1: Added
         model.add(layers.Dropout(dropout_rate))
 
-        # Additional LSTM layers
-        # Enumerate over remaining layers (skip first, already added)
+        # Additional LSTM layers with batch normalization
         for i, units in enumerate(lstm_units[1:]):
-            # return_seq: True for all but last LSTM layer
-            # Example: [64, 32] -> i=0 is last, return_seq=False
-            # Example: [64, 32, 16] -> i=0,1 have return_seq=True,False
             return_seq = i < len(lstm_units) - 2
             model.add(layers.LSTM(units, return_sequences=return_seq))
+            if return_seq:  # Only add BatchNorm if return_sequences=True
+                model.add(layers.BatchNormalization())  # PHASE 3.1: Added
             model.add(layers.Dropout(dropout_rate))
 
-        # Output layer
-        model.add(layers.Dense(1))
+        # PHASE 3.1: Dense layer for better representation
+        model.add(layers.Dense(16, activation='relu'))
+        model.add(layers.Dropout(0.2))
+
+        # Output layer - PHASE 3.1: tanh activation for centered output
+        model.add(layers.Dense(1, activation='tanh'))
 
         # Compile model
         optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
@@ -198,23 +232,36 @@ class LSTMPricePredictor:
             callbacks=callback_list,
             verbose=1
         )
+        
+        # PHASE 3.1: Fit bias corrector on validation set
+        if X_val is not None and y_val is not None:
+            print("\nFitting bias correction on validation set...")
+            val_predictions = self.model.predict(X_val, verbose=0)
+            self.bias_corrector.fit(val_predictions.flatten(), y_val)
+        else:
+            print("\nNo validation set - skipping bias correction")
 
         return self.history
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Make predictions with the trained model.
+        
+        PHASE 3.1: Applies bias correction to predictions.
 
         Args:
             X (np.array): Input sequences
 
         Returns:
-            np.array: Predictions
+            np.array: Bias-corrected predictions
         """
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
 
-        return self.model.predict(X, verbose=0)
+        raw_predictions = self.model.predict(X, verbose=0)
+        # PHASE 3.1: Apply bias correction
+        corrected_predictions = self.bias_corrector.correct(raw_predictions.flatten())
+        return corrected_predictions
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """

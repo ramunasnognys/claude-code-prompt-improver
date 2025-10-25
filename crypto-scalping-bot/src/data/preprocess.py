@@ -138,9 +138,11 @@ class DataPreprocessor:
 
         return df
 
-    def create_sequences(self, df: pd.DataFrame, lookback: int = 60, target_col: str = 'close') -> Tuple[np.ndarray, np.ndarray, pd.Index]:
+    def create_sequences(self, df: pd.DataFrame, lookback: int = 60, target_col: str = 'close', predict_change: bool = True) -> Tuple[np.ndarray, np.ndarray, pd.Index]:
         """
         Create 3D sequences for LSTM input from time series data.
+        
+        PHASE 3.1: Modified to predict PRICE CHANGES instead of absolute prices.
 
         Applies MinMaxScaler to normalize features, then creates sliding window sequences
         where each X[i] contains lookback timesteps of features, and y[i] is the target value.
@@ -149,11 +151,12 @@ class DataPreprocessor:
             df: DataFrame with technical indicators (output of add_technical_indicators)
             lookback: Number of past timesteps in each sequence (window size)
             target_col: Feature to predict (typically 'close' price)
+            predict_change: PHASE 3.1: If True, predict % price change (not absolute price)
 
         Returns:
             Tuple containing:
                 - X: Input sequences, shape (num_sequences, lookback, num_features)
-                - y: Target values, shape (num_sequences,) - scaled values
+                - y: Target values, shape (num_sequences,) - price changes if predict_change=True
                 - indices: Original DataFrame indices for alignment
 
         Example:
@@ -178,7 +181,11 @@ class DataPreprocessor:
 
         # Drop NaN values (from indicators)
         df = df.dropna()
-
+        
+        # PHASE 3.1 FIX: Store raw price_change BEFORE scaling
+        if predict_change and 'price_change' in df.columns:
+            raw_price_changes = df['price_change'].values
+        
         # Extract features
         features = df[self.feature_columns].values
 
@@ -189,15 +196,21 @@ class DataPreprocessor:
         # Each X[i] contains lookback timesteps of all features
         # Each y[i] is the target value at timestep i
         X, y = [], []
+        
+        target_idx = self.feature_columns.index(target_col)
 
         for i in range(lookback, len(features_scaled)):
             # Sequence: features from [i-lookback] to [i-1] (lookback timesteps)
             # Example: lookback=60, i=100 -> features[40:100]
             X.append(features_scaled[i - lookback:i])
 
-            # Target: predict the target_col value at timestep i
-            # Extract scaled close price at position i
-            y.append(features_scaled[i, self.feature_columns.index(target_col)])
+            if predict_change:
+                # PHASE 3.1 FIX: Use actual price_change values (not calculated on normalized data!)
+                # The price_change column already has the correct percentage changes
+                y.append(raw_price_changes[i])
+            else:
+                # Original: predict absolute price
+                y.append(features_scaled[i, target_idx])
 
         X = np.array(X)
         y = np.array(y)

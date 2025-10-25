@@ -67,9 +67,9 @@ class BacktestRunner:
         bt_data['ATR_SMA'] = df['atr_sma_20'].values
         bt_data['Volume_SMA'] = df['volume_sma_20'].values
 
-        # Add normalized predictions and actuals
-        bt_data['Predicted_Norm'] = predictions_norm
-        bt_data['Actual_Norm'] = actuals_norm
+        # PHASE 3.1: Add price change predictions (not normalized prices)
+        bt_data['Predicted_Change'] = predictions_norm  # These are % changes now
+        bt_data['Actual_Norm'] = actuals_norm  # Keep for reference
 
         # Drop rows with NaN
         bt_data = bt_data.dropna()

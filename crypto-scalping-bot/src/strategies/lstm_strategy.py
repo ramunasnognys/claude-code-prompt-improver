@@ -61,25 +61,11 @@ class LSTMScalpingStrategy(Strategy):
             - price_change_predicted: % change from previous actual to current prediction
             - Prints diagnostic info about prediction distribution
         """
-        # Get normalized predictions and actuals from the dataframe
-        self.predictions_norm = self.data.Predicted_Norm  # LSTM output (scaled [0,1])
-        self.actuals_norm = self.data.Actual_Norm  # True prices (scaled [0,1])
+        # PHASE 3.1: Get price change predictions directly from model
+        self.price_change_predicted = self.data.Predicted_Change  # LSTM now predicts % changes
         self.current_price = self.data.Close  # Real prices for position sizing
-
-        # Calculate predicted price change percentage in normalized space
-        # IMPORTANT: Model predicts NEXT period's close
-        # At time t, prediction[t] forecasts actual[t], but we're at actual[t-1]
-        # So we compare: prediction[t] vs actual[t-1] to get predicted change
-
-        # Shift actual values forward by 1: prev_actual[i] = actual[i-1]
-        # Example: actual=[10,11,12] -> prev_actual=[NaN,10,11]
-        prev_actual_norm = np.concatenate([[np.nan], self.actuals_norm[:-1]])
-
-        # Calculate percentage change from previous actual to current prediction
-        # (predicted_price - previous_price) / previous_price
-        self.price_change_predicted = (
-            (self.predictions_norm - prev_actual_norm) / prev_actual_norm
-        )
+        
+        # No need to calculate predicted changes - model does this now!
         
         # Debug: Check if prediction changes make sense
         pred_changes = self.price_change_predicted
