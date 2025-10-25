@@ -1,0 +1,47 @@
+{
+  "id": 6,
+  "title": "Age-Specific Cat Fencing: Senior Cats vs Kittens Containment Guide",
+  "slug": "age-specific-cat-fencing-guide",
+  "keywords": [
+    "senior cat fence",
+    "kitten containment",
+    "age-appropriate cat barrier",
+    "elderly cat outdoor safety"
+  ],
+  "target_products": [
+    "cat-proof fence kits",
+    "paddle sets"
+  ],
+  "target_collections": [
+    "cat-proof fence kits"
+  ],
+  "description": "Tailored fencing solutions based on your cat's age, mobility, and energy levels",
+  "metadata": {
+    "title": "Age-Specific Cat Fencing: Senior Cats vs Kittens Containment Guide",
+    "slug": "age-specific-cat-fencing-guide",
+    "keywords": [
+      "senior cat fence",
+      "kitten containment",
+      "age-appropriate cat barrier",
+      "elderly cat outdoor safety"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.100Z",
+    "targetProducts": [
+      "cat-proof fence kits",
+      "paddle sets"
+    ],
+    "targetCollections": [
+      "cat-proof fence kits"
+    ],
+    "description": "Tailored fencing solutions based on your cat's age, mobility, and energy levels"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

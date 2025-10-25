@@ -1,0 +1,49 @@
+{
+  "id": 2,
+  "title": "How to Cat-Proof a Balcony or Apartment: Complete Urban Guide 2025",
+  "slug": "cat-proof-balcony-apartment-guide",
+  "keywords": [
+    "cat-proof balcony",
+    "apartment cat safety",
+    "urban cat containment",
+    "balcony cat netting"
+  ],
+  "target_products": [
+    "paddle sets",
+    "cat tree guard",
+    "brackets"
+  ],
+  "target_collections": [
+    "spare parts"
+  ],
+  "description": "Essential guide for urban cat owners looking to create safe outdoor spaces in apartments and condos",
+  "metadata": {
+    "title": "How to Cat-Proof a Balcony or Apartment: Complete Urban Guide 2025",
+    "slug": "cat-proof-balcony-apartment-guide",
+    "keywords": [
+      "cat-proof balcony",
+      "apartment cat safety",
+      "urban cat containment",
+      "balcony cat netting"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.099Z",
+    "targetProducts": [
+      "paddle sets",
+      "cat tree guard",
+      "brackets"
+    ],
+    "targetCollections": [
+      "spare parts"
+    ],
+    "description": "Essential guide for urban cat owners looking to create safe outdoor spaces in apartments and condos"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

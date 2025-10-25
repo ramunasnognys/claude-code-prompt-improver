@@ -1,0 +1,47 @@
+{
+  "id": 13,
+  "title": "Urban vs Rural Cat Containment: Choosing the Right System for Your Location",
+  "slug": "urban-rural-cat-containment-systems",
+  "keywords": [
+    "urban cat fence",
+    "rural cat containment",
+    "location-based cat safety",
+    "city vs country cats"
+  ],
+  "target_products": [
+    "cat-proof fence kits",
+    "cat tree guard"
+  ],
+  "target_collections": [
+    "cat-proof fence kits"
+  ],
+  "description": "Location-specific recommendations for cat containment in different environments",
+  "metadata": {
+    "title": "Urban vs Rural Cat Containment: Choosing the Right System for Your Location",
+    "slug": "urban-rural-cat-containment-systems",
+    "keywords": [
+      "urban cat fence",
+      "rural cat containment",
+      "location-based cat safety",
+      "city vs country cats"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.101Z",
+    "targetProducts": [
+      "cat-proof fence kits",
+      "cat tree guard"
+    ],
+    "targetCollections": [
+      "cat-proof fence kits"
+    ],
+    "description": "Location-specific recommendations for cat containment in different environments"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

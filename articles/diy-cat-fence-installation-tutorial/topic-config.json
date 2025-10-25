@@ -1,0 +1,51 @@
+{
+  "id": 9,
+  "title": "DIY Cat Fence Installation: Complete Step-by-Step Tutorial with Tools List",
+  "slug": "diy-cat-fence-installation-tutorial",
+  "keywords": [
+    "DIY cat fence",
+    "install cat fence yourself",
+    "cat fence installation guide",
+    "oscillot installation"
+  ],
+  "target_products": [
+    "cat-proof fence kits",
+    "brackets",
+    "paddle sets"
+  ],
+  "target_collections": [
+    "cat-proof fence kits",
+    "spare parts"
+  ],
+  "description": "Detailed DIY installation guide with tools, timeline, and troubleshooting tips",
+  "metadata": {
+    "title": "DIY Cat Fence Installation: Complete Step-by-Step Tutorial with Tools List",
+    "slug": "diy-cat-fence-installation-tutorial",
+    "keywords": [
+      "DIY cat fence",
+      "install cat fence yourself",
+      "cat fence installation guide",
+      "oscillot installation"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.101Z",
+    "targetProducts": [
+      "cat-proof fence kits",
+      "brackets",
+      "paddle sets"
+    ],
+    "targetCollections": [
+      "cat-proof fence kits",
+      "spare parts"
+    ],
+    "description": "Detailed DIY installation guide with tools, timeline, and troubleshooting tips"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

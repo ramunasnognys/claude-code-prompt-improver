@@ -1,0 +1,45 @@
+{
+  "id": 11,
+  "title": "Introducing Your Cat to a Newly Fenced Yard: 7-Day Training Plan",
+  "slug": "introducing-cat-to-fenced-yard",
+  "keywords": [
+    "cat yard training",
+    "outdoor cat introduction",
+    "new fence cat behavior",
+    "cat outdoor transition"
+  ],
+  "target_products": [
+    "cat-proof fence kits"
+  ],
+  "target_collections": [
+    "cat-proof fence kits"
+  ],
+  "description": "Behavioral guide for smooth transition to safe outdoor access with new fencing",
+  "metadata": {
+    "title": "Introducing Your Cat to a Newly Fenced Yard: 7-Day Training Plan",
+    "slug": "introducing-cat-to-fenced-yard",
+    "keywords": [
+      "cat yard training",
+      "outdoor cat introduction",
+      "new fence cat behavior",
+      "cat outdoor transition"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.101Z",
+    "targetProducts": [
+      "cat-proof fence kits"
+    ],
+    "targetCollections": [
+      "cat-proof fence kits"
+    ],
+    "description": "Behavioral guide for smooth transition to safe outdoor access with new fencing"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

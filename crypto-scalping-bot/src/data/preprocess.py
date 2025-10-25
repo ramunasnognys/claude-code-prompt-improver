@@ -119,6 +119,23 @@ class DataPreprocessor:
         df['volume_sma_20'] = df['volume'].rolling(window=20).mean()
         df['volume_ratio'] = df['volume'] / df['volume_sma_20']
 
+        # PHASE 2.2: Add ATR (Average True Range) for volatility measurement
+        from ta.volatility import AverageTrueRange
+        atr = AverageTrueRange(high=df['high'], low=df['low'], close=df['close'], window=14)
+        df['atr_14'] = atr.average_true_range()
+        df['atr_pct'] = df['atr_14'] / df['close']  # ATR as percentage of price
+        
+        # Calculate ATR moving average for volatility filter
+        df['atr_sma_20'] = df['atr_14'].rolling(window=20).mean()
+        df['atr_ratio'] = df['atr_14'] / df['atr_sma_20']  # Current volatility vs average
+        
+        # PHASE 2.2: Add ADX (Average Directional Index) for trend strength
+        from ta.trend import ADXIndicator
+        adx = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
+        df['adx_14'] = adx.adx()
+        df['adx_pos'] = adx.adx_pos()  # +DI (positive directional indicator)
+        df['adx_neg'] = adx.adx_neg()  # -DI (negative directional indicator)
+
         return df
 
     def create_sequences(self, df: pd.DataFrame, lookback: int = 60, target_col: str = 'close') -> Tuple[np.ndarray, np.ndarray, pd.Index]:

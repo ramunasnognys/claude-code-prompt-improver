@@ -1,0 +1,49 @@
+{
+  "id": 8,
+  "title": "Seasonal Cat Fence Maintenance: Winter vs Summer Care Guide",
+  "slug": "seasonal-cat-fence-maintenance-guide",
+  "keywords": [
+    "cat fence maintenance",
+    "winter fence care",
+    "summer cat barrier upkeep",
+    "fence weatherproofing"
+  ],
+  "target_products": [
+    "spare parts",
+    "brackets",
+    "axle pins"
+  ],
+  "target_collections": [
+    "spare parts"
+  ],
+  "description": "Year-round maintenance schedule for optimal cat fence performance in all seasons",
+  "metadata": {
+    "title": "Seasonal Cat Fence Maintenance: Winter vs Summer Care Guide",
+    "slug": "seasonal-cat-fence-maintenance-guide",
+    "keywords": [
+      "cat fence maintenance",
+      "winter fence care",
+      "summer cat barrier upkeep",
+      "fence weatherproofing"
+    ],
+    "author": "Oscillot America",
+    "publishDate": "2025-10-23T05:22:50.100Z",
+    "targetProducts": [
+      "spare parts",
+      "brackets",
+      "axle pins"
+    ],
+    "targetCollections": [
+      "spare parts"
+    ],
+    "description": "Year-round maintenance schedule for optimal cat fence performance in all seasons"
+  },
+  "jinaApiKey": "jina_d1114b7bbf404c72851738f87b9d7343XV5OHbxgIx0fqHw7yPBnkhgdO404",
+  "productsBase": "https://oscillotamerica.com/products/",
+  "collectionsBase": "https://oscillotamerica.com/collections/",
+  "sitemapUrls": {
+    "products": "https://oscillotamerica.com/sitemap_products_1.xml?from=7552589267169&to=8003189735649",
+    "collections": "https://oscillotamerica.com/sitemap_collections_1.xml?from=58566541363&to=412846031073",
+    "blogs": "https://oscillotamerica.com/sitemap_blogs_1.xml"
+  }
+}

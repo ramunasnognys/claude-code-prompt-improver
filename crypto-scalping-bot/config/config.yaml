@@ -44,8 +44,9 @@ trading:
   # SCALPING RISK MANAGEMENT
   # Adjust these to match your risk tolerance
   # ============================================================
-  max_position_size: 0.1     # Maximum % of capital per trade (0-1)
-                             # 0.1 = 10% max position size
+  max_position_size: 0.3     # Maximum % of capital per trade (0-1)
+                             # PHASE 2.1: Increased from 0.1 to 0.3 (30%)
+                             # 0.3 = 30% max position size (conservative)
                              # Lower = more conservative, higher = aggressive
                              # NOTE: Actual position size set in strategy classes
 
@@ -54,15 +55,17 @@ trading:
                              # Higher leverage = higher risk/reward
                              # WARNING: Leverage >10x very risky
 
-  stop_loss_pct: 0.005       # Stop loss percentage (0.005 = 0.5%)
+  stop_loss_pct: 0.01        # Stop loss percentage (0.01 = 1.0%)
+                             # PHASE 2.1: Increased from 0.5% to 1.0%
                              # Distance from entry where loss is cut
-                             # Lower = tighter stops, more stopouts
-                             # Higher = more room, larger losses
+                             # Wider stops allow for normal market noise
+                             # Previous 0.5% was too tight (<5× commission cost)
 
-  take_profit_pct: 0.01      # Take profit percentage (0.01 = 1%)
+  take_profit_pct: 0.025     # Take profit percentage (0.025 = 2.5%)
+                             # PHASE 2.1: Increased from 1.0% to 2.5%
                              # Distance from entry where profit is taken
                              # Should be > stop_loss_pct for positive expectancy
-                             # Common ratio: 2:1 (TP = 2x SL)
+                             # New ratio: 2.5:1 (TP = 2.5× SL) for better expectancy
 
   # ============================================================
   # DAILY RISK LIMITS

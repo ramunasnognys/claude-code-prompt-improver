@@ -60,6 +60,12 @@ class BacktestRunner:
         bt_data['MACD_Signal'] = df['macd_signal'].values
         bt_data['BB_Upper'] = df['bb_upper'].values
         bt_data['BB_Lower'] = df['bb_lower'].values
+        
+        # PHASE 2.2: Add new indicators for filters
+        bt_data['ADX'] = df['adx_14'].values
+        bt_data['ATR'] = df['atr_14'].values
+        bt_data['ATR_SMA'] = df['atr_sma_20'].values
+        bt_data['Volume_SMA'] = df['volume_sma_20'].values
 
         # Add normalized predictions and actuals
         bt_data['Predicted_Norm'] = predictions_norm
