@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { LogoutButton } from '@/components/auth/LogoutButton'
+import { PricingGrid } from '@/components/pricing/PricingGrid'
+import { ManageSubscriptionButton } from '@/components/dashboard/ManageSubscriptionButton'
+import { CancelSubscriptionButton } from '@/components/dashboard/CancelSubscriptionButton'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
@@ -16,13 +19,15 @@ export default async function DashboardPage() {
   // Fetch subscription data
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('plan, status, current_period_end')
+    .select('plan, status, current_period_end, cancel_at_period_end, interval')
     .eq('user_id', user.id)
     .single()
 
   const plan = subscription?.plan || 'free'
   const status = subscription?.status || 'active'
   const periodEnd = subscription?.current_period_end
+  const cancelAtEnd = subscription?.cancel_at_period_end || false
+  const interval = subscription?.interval
 
   // Plan badge colors
   const planColors = {
@@ -139,18 +144,36 @@ export default async function DashboardPage() {
               </ul>
             </div>
 
-            {/* Upgrade CTA for Free Users */}
-            {plan === 'free' && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-gray-700 mb-4">
-                  Upgrade to unlock more features and capabilities
-                </p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-md">
-                  Upgrade Plan
-                </button>
-              </div>
-            )}
+            {/* Subscription Actions */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              {plan !== 'free' && (
+                <div className="space-y-3">
+                  {interval && (
+                    <p className="text-sm text-gray-600">
+                      Billing: <span className="font-semibold capitalize">{interval}ly</span>
+                    </p>
+                  )}
+                  {cancelAtEnd && (
+                    <p className="text-orange-600 font-semibold">
+                      Subscription will cancel at period end
+                    </p>
+                  )}
+                  <div className="flex gap-3">
+                    <ManageSubscriptionButton />
+                    {!cancelAtEnd && <CancelSubscriptionButton />}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="mb-8">
+          <h3 className="text-3xl font-bold text-gray-900 mb-6">
+            {plan === 'free' ? 'Upgrade Your Plan' : 'Change Plan'}
+          </h3>
+          <PricingGrid currentPlan={plan} />
         </div>
 
         {/* Dashboard Content Placeholder */}
