@@ -169,8 +169,12 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     sub_status: subscription.status,
     sub_plan: planInfo.plan,
     sub_interval: planInfo.interval,
-    period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    period_start: subscription.current_period_start
+      ? new Date(subscription.current_period_start * 1000).toISOString()
+      : null,
+    period_end: subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null,
     cancel_at_end: subscription.cancel_at_period_end,
     canceled: subscription.canceled_at
       ? new Date(subscription.canceled_at * 1000).toISOString()

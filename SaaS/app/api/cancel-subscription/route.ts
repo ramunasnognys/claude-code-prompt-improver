@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Get subscription
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
-      .select('stripe_subscription_id')
+      .select('stripe_subscription_id, plan, interval, current_period_end')
       .eq('user_id', user.id)
       .single()
 
@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      plan: subscription.plan,
+      interval: subscription.interval,
+      current_period_end: subscription.current_period_end,
       cancel_at: updatedSubscription.cancel_at,
     })
   } catch (error) {
