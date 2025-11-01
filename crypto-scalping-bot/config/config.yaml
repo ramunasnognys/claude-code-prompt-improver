@@ -87,9 +87,9 @@ trading:
 model:
   type: lstm                 # Model type (currently only LSTM supported)
 
-  lookback_periods: 60       # Number of historical periods to use for prediction
-                             # 60 = use last 60 candles to predict next one
-                             # For 1m timeframe: 60 = last hour of data
+  lookback_periods: 120      # PHASE 3.2: Increased from 60 to 120 for better context
+                             # 120 = use last 120 candles to predict next one
+                             # For 1m timeframe: 120 = last 2 hours of data
                              # Higher = more context, slower training
                              # Lower = faster, may miss patterns
 
@@ -118,7 +118,7 @@ model:
   # TRAINING HYPERPARAMETERS
   # Control the learning process
   # ============================================================
-  epochs: 30                 # PHASE 3.1: Back to 30 (from 15) for better convergence
+  epochs: 50                 # PHASE 3.2: Increased from 30 to 50 for better convergence
                              # EarlyStopping may stop training before this
                              # Typical range: 20-100
 

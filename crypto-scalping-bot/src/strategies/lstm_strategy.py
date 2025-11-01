@@ -25,12 +25,12 @@ class LSTMScalpingStrategy(Strategy):
         5. Confirm with MACD (trend alignment)
         6. Execute with stop-loss and take-profit
 
-    Strategy Parameters (optimizable):
-        - prediction_threshold: Min predicted price change (default 0.05%)
-        - rsi_oversold/overbought: RSI bounds (30/70)
-        - stop_loss_pct: Stop loss percentage (0.5%)
-        - take_profit_pct: Take profit percentage (1%)
-        - position_size: Fraction of equity per trade (95%)
+    Strategy Parameters (Phase 2 optimized):
+        - prediction_threshold: Min predicted price change (0.2%, Phase 2.1)
+        - rsi_oversold/overbought: RSI bounds (25/75, Phase 2.3)
+        - stop_loss_pct: Stop loss percentage (1%, Phase 2.1)
+        - take_profit_pct: Take profit percentage (2%, Phase 2.1, 2:1 RR)
+        - position_size: Fraction of equity per trade (30%, Phase 2.2)
 
     Example:
         >>> from backtesting import Backtest
@@ -40,12 +40,19 @@ class LSTMScalpingStrategy(Strategy):
     """
 
     # Strategy parameters (can be optimized)
-    prediction_threshold = 0.0005  # Minimum predicted price change (0.05% - lowered for more trades)
-    rsi_oversold = 30
-    rsi_overbought = 70
-    stop_loss_pct = 0.005        # 0.5% stop loss
-    take_profit_pct = 0.01       # 1% take profit
-    position_size = 0.95         # Use 95% of available equity
+    # PHASE 2 OPTIMIZED PARAMETERS (2025-10-25)
+    prediction_threshold = 0.002   # 0.2% minimum price change (Phase 2.1: quality over quantity)
+    rsi_oversold = 25              # Phase 2.3: expanded RSI range
+    rsi_overbought = 75            # Phase 2.3: expanded RSI range
+    stop_loss_pct = 0.01           # 1% stop loss (Phase 2.1: survive noise)
+    take_profit_pct = 0.02         # 2% take profit (Phase 2.1: 2:1 risk/reward)
+    position_size = 0.3            # 30% of equity (Phase 2.2: conservative sizing, reduced max DD)
+
+    # PHASE 2.3 TRADE FILTERS (Quality over Quantity)
+    # Testing showed volume filter alone performs BEST (return -2.96%, Sharpe -0.54)
+    # ADX filter alone or combined with volume performed worse
+    adx_threshold = 0.0            # Disabled (testing showed ADX filter worsens results)
+    volume_threshold = 0.2         # Min volume ratio vs 20-period SMA (0.2 = 20% above avg)
 
     def init(self) -> None:
         """
@@ -66,12 +73,12 @@ class LSTMScalpingStrategy(Strategy):
         self.current_price = self.data.Close  # Real prices for position sizing
         
         # No need to calculate predicted changes - model does this now!
-        
+
         # Debug: Check if prediction changes make sense
         pred_changes = self.price_change_predicted
         pred_mean = pred_changes.mean()
         pred_std = pred_changes.std()
-        
+
         print(f"\n{'='*60}")
         print(f"Strategy Initialization - Prediction Analysis")
         print(f"{'='*60}")
@@ -79,7 +86,7 @@ class LSTMScalpingStrategy(Strategy):
         print(f"Prediction changes std: {pred_std*100:.4f}%")
         print(f"Prediction changes range: {pred_changes.min()*100:.4f}% to {pred_changes.max()*100:.4f}%")
         print(f"Strategy threshold: ±{self.prediction_threshold*100:.4f}%")
-        
+
         # Count how many predictions exceed threshold
         bullish_signals = (pred_changes > self.prediction_threshold).sum()
         bearish_signals = (pred_changes < -self.prediction_threshold).sum()
@@ -87,10 +94,7 @@ class LSTMScalpingStrategy(Strategy):
         print(f"Potential bearish signals: {bearish_signals} ({bearish_signals/len(pred_changes)*100:.2f}%)")
         print(f"{'='*60}\n")
 
-        # Technical indicators from data
-        self.rsi = self.data.RSI
-        self.macd = self.data.MACD
-        self.macd_signal = self.data.MACD_Signal
+        # Note: Indicators accessed directly from self.data in next() method
 
     def next(self) -> None:
         """
@@ -106,24 +110,33 @@ class LSTMScalpingStrategy(Strategy):
             return
 
         current_prediction = self.price_change_predicted[-1]
-        current_rsi = self.rsi[-1]
-        current_macd = self.macd[-1]
-        current_macd_signal = self.macd_signal[-1]
+        # Access indicators directly from data to get current bar values
+        current_rsi = self.data.RSI[-1]
+        current_macd = self.data.MACD[-1]
+        current_macd_signal = self.data.MACD_Signal[-1]
+
+        # PHASE 2.3: Extract ADX and volume for trade filters
+        current_adx = self.data.ADX[-1]
+        current_volume = self.data.Volume[-1]
+        current_volume_sma = self.data.Volume_SMA[-1]
 
         # If we have a position, check stop-loss and take-profit
         if self.position:
             self._manage_position()
             return
 
-        # Generate long signal
-        if self._should_go_long(current_prediction, current_rsi, current_macd, current_macd_signal):
+        # Generate long signal (Phase 2.3: added ADX and volume filters)
+        if self._should_go_long(current_prediction, current_rsi, current_macd, current_macd_signal,
+                                current_adx, current_volume, current_volume_sma):
             self._open_long()
 
-        # Generate short signal
-        elif self._should_go_short(current_prediction, current_rsi, current_macd, current_macd_signal):
+        # Generate short signal (Phase 2.3: added ADX and volume filters)
+        elif self._should_go_short(current_prediction, current_rsi, current_macd, current_macd_signal,
+                                   current_adx, current_volume, current_volume_sma):
             self._open_short()
 
-    def _should_go_long(self, prediction: float, rsi: float, macd: float, macd_signal: float) -> bool:
+    def _should_go_long(self, prediction: float, rsi: float, macd: float, macd_signal: float,
+                       adx: float, volume: float, volume_sma: float) -> bool:
         """
         Evaluate long entry conditions.
 
@@ -132,20 +145,30 @@ class LSTMScalpingStrategy(Strategy):
             rsi: Current RSI value (0-100)
             macd: MACD line value
             macd_signal: MACD signal line value
+            adx: Current ADX value (trend strength)
+            volume: Current volume
+            volume_sma: 20-period volume SMA
 
         Returns:
             True if all conditions met:
                 - Prediction > prediction_threshold (bullish LSTM)
                 - RSI < rsi_overbought (room to move up)
                 - MACD > MACD_signal (trend confirmation)
+                - ADX > adx_threshold (trending market, Phase 2.3)
+                - Volume > volume_threshold * volume_sma (sufficient liquidity, Phase 2.3)
         """
         prediction_bullish = prediction > self.prediction_threshold
         rsi_ok = rsi < self.rsi_overbought
         macd_bullish = macd > macd_signal
 
-        return prediction_bullish and rsi_ok and macd_bullish
+        # PHASE 2.3: Add trend and volume filters
+        adx_ok = adx > self.adx_threshold
+        volume_ok = volume > (self.volume_threshold * volume_sma)
 
-    def _should_go_short(self, prediction: float, rsi: float, macd: float, macd_signal: float) -> bool:
+        return prediction_bullish and rsi_ok and macd_bullish and adx_ok and volume_ok
+
+    def _should_go_short(self, prediction: float, rsi: float, macd: float, macd_signal: float,
+                        adx: float, volume: float, volume_sma: float) -> bool:
         """
         Evaluate short entry conditions.
 
@@ -154,18 +177,27 @@ class LSTMScalpingStrategy(Strategy):
             rsi: Current RSI value (0-100)
             macd: MACD line value
             macd_signal: MACD signal line value
+            adx: Current ADX value (trend strength)
+            volume: Current volume
+            volume_sma: 20-period volume SMA
 
         Returns:
             True if all conditions met:
                 - Prediction < -prediction_threshold (bearish LSTM)
                 - RSI > rsi_oversold (room to move down)
                 - MACD < MACD_signal (downtrend confirmation)
+                - ADX > adx_threshold (trending market, Phase 2.3)
+                - Volume > volume_threshold * volume_sma (sufficient liquidity, Phase 2.3)
         """
         prediction_bearish = prediction < -self.prediction_threshold
         rsi_ok = rsi > self.rsi_oversold
         macd_bearish = macd < macd_signal
 
-        return prediction_bearish and rsi_ok and macd_bearish
+        # PHASE 2.3: Add trend and volume filters
+        adx_ok = adx > self.adx_threshold
+        volume_ok = volume > (self.volume_threshold * volume_sma)
+
+        return prediction_bearish and rsi_ok and macd_bearish and adx_ok and volume_ok
 
     def _open_long(self) -> None:
         """Open a long position with risk management."""
@@ -212,10 +244,12 @@ class AggressiveLSTMStrategy(LSTMScalpingStrategy):
     """
     Aggressive scalping variant for high-frequency trading.
 
+    PHASE 2 UPDATED: Maintains 2:1 risk/reward with tighter ranges.
+
     Characteristics:
-        - Very sensitive (0.02% threshold) - more trades
-        - Tight risk management (0.3% SL, 0.6% TP) - quick exits
-        - High leverage (98% equity) - maximize capital efficiency
+        - More sensitive (0.15% threshold) - more trades than default
+        - 2:1 risk management (0.75% SL, 1.5% TP) - maintains RR ratio
+        - Higher leverage (50% equity) - balanced risk (Phase 2 compliant)
 
     Use when:
         - High confidence in model accuracy
@@ -224,20 +258,26 @@ class AggressiveLSTMStrategy(LSTMScalpingStrategy):
 
     Risk: Higher drawdown potential, more sensitive to noise
     """
-    prediction_threshold = 0.0002  # 0.02% threshold (very sensitive)
-    stop_loss_pct = 0.003        # 0.3% stop
-    take_profit_pct = 0.006      # 0.6% target
-    position_size = 0.98         # 98% of equity
+    prediction_threshold = 0.0015  # 0.15% threshold (more sensitive than default 0.2%)
+    rsi_oversold = 25              # Same as default
+    rsi_overbought = 75            # Same as default
+    stop_loss_pct = 0.0075         # 0.75% stop (tighter, still > commission)
+    take_profit_pct = 0.015        # 1.5% target (2:1 ratio maintained)
+    position_size = 0.5            # 50% of equity (Phase 2 compliant, less than old 98%)
+    adx_threshold = 0.0            # Disabled (same as default)
+    volume_threshold = 0.2         # Volume filter enabled
 
 
 class ConservativeLSTMStrategy(LSTMScalpingStrategy):
     """
     Conservative variant for stable, lower-risk trading.
 
+    PHASE 2 UPDATED: Wider targets, minimal position size.
+
     Characteristics:
-        - Less sensitive (0.1% threshold) - fewer, higher-quality trades
-        - Wide risk management (1% SL, 2% TP) - room for volatility
-        - Lower leverage (50% equity) - preserve capital
+        - Less sensitive (0.3% threshold) - fewer, higher-quality trades
+        - Wide risk management (1.5% SL, 3% TP) - 2:1 ratio, room for volatility
+        - Minimal leverage (20% equity) - maximum capital preservation
 
     Use when:
         - Model accuracy uncertain
@@ -246,7 +286,11 @@ class ConservativeLSTMStrategy(LSTMScalpingStrategy):
 
     Risk: Fewer opportunities, may miss quick reversals
     """
-    prediction_threshold = 0.001  # 0.1% threshold (less sensitive than default)
-    stop_loss_pct = 0.01         # 1% stop
-    take_profit_pct = 0.02       # 2% target
-    position_size = 0.5          # 50% of equity
+    prediction_threshold = 0.003  # 0.3% threshold (less sensitive than default 0.2%)
+    rsi_oversold = 25             # Same as default
+    rsi_overbought = 75           # Same as default
+    stop_loss_pct = 0.015         # 1.5% stop (wider for volatility)
+    take_profit_pct = 0.03        # 3% target (2:1 ratio maintained)
+    position_size = 0.2           # 20% of equity (ultra-conservative)
+    adx_threshold = 0.0           # Disabled (same as default)
+    volume_threshold = 0.2        # Volume filter enabled

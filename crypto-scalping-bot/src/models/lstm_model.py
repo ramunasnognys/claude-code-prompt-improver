@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers, callbacks
+from tensorflow.keras import layers, callbacks, regularizers
 import yaml
 import pickle
 from pathlib import Path
@@ -137,11 +137,15 @@ class LSTMPricePredictor:
             model.add(layers.Dropout(dropout_rate))
 
         # PHASE 3.1: Dense layer for better representation
-        model.add(layers.Dense(16, activation='relu'))
+        # PHASE 3.2: Added L2 regularization (0.01) to reduce overfitting
+        model.add(layers.Dense(16, activation='relu',
+                               kernel_regularizer=regularizers.l2(0.01)))
         model.add(layers.Dropout(0.2))
 
         # Output layer - PHASE 3.1: tanh activation for centered output
-        model.add(layers.Dense(1, activation='tanh'))
+        # PHASE 3.2: Added L2 regularization (0.01) to output layer
+        model.add(layers.Dense(1, activation='tanh',
+                               kernel_regularizer=regularizers.l2(0.01)))
 
         # Compile model
         optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
