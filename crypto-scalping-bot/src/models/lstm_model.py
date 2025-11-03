@@ -396,45 +396,43 @@ def main() -> None:
     # Preprocess data
     preprocessor = DataPreprocessor()
     df_processed = preprocessor.add_technical_indicators(df)
-    X, y, indices = preprocessor.create_sequences(df_processed, lookback=60)
+
+    # Load lookback from config
+    config_path = Path(__file__).parent.parent.parent / 'config' / 'config.yaml'
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    lookback = config['model']['lookback_periods']
+
+    X, y, indices = preprocessor.create_sequences(df_processed, lookback=lookback)
     preprocessor.save_scaler()
 
     # DATE-BASED SPLIT TO PREVENT DATA LEAKAGE (Phase 1.1)
-    # Train: Jan 1 - Feb 28, 2024
-    # Validation: Mar 1 - Mar 15, 2024
-    # Test: Mar 16 - Mar 31, 2024 (will be used for backtesting)
+    # Since we only have Mar 16-31 data, use simple ratio split instead
+    # Train: 70%, Validation: 15%, Test: 15%
+
+    n_samples = len(X)
+    train_idx = int(0.7 * n_samples)
+    val_idx = int(0.85 * n_samples)
     
-    train_end = pd.Timestamp('2024-02-28 23:59:59')
-    val_end = pd.Timestamp('2024-03-15 23:59:59')
-    
-    # Get datetime array for indices
-    datetime_array = df_processed['datetime'].iloc[indices].values
-    datetime_array = pd.to_datetime(datetime_array)
-    
-    # Create masks for each split
-    train_mask = datetime_array <= train_end
-    val_mask = (datetime_array > train_end) & (datetime_array <= val_end)
-    test_mask = datetime_array > val_end
-    
-    # Split data based on dates
-    X_train = X[train_mask]
-    y_train = y[train_mask]
-    
-    X_val = X[val_mask]
-    y_val = y[val_mask]
-    
-    X_test = X[test_mask]
-    y_test = y[test_mask]
-    
-    # Print split information with dates
+    # Simple index-based split
+    X_train = X[:train_idx]
+    y_train = y[:train_idx]
+
+    X_val = X[train_idx:val_idx]
+    y_val = y[train_idx:val_idx]
+
+    X_test = X[val_idx:]
+    y_test = y[val_idx:]
+
+    # Print split information
     print(f"\n{'='*70}")
-    print("DATA SPLIT (Date-Based - No Data Leakage)")
+    print("DATA SPLIT (70/15/15 Ratio)")
     print(f"{'='*70}")
-    print(f"Training:   {len(X_train):6d} samples | {datetime_array[train_mask].min()} to {datetime_array[train_mask].max()}")
-    print(f"Validation: {len(X_val):6d} samples | {datetime_array[val_mask].min()} to {datetime_array[val_mask].max()}")
-    print(f"Test:       {len(X_test):6d} samples | {datetime_array[test_mask].min()} to {datetime_array[test_mask].max()}")
+    print(f"Training:   {len(X_train):6d} samples ({100*len(X_train)/len(X):.1f}%)")
+    print(f"Validation: {len(X_val):6d} samples ({100*len(X_val)/len(X):.1f}%)")
+    print(f"Test:       {len(X_test):6d} samples ({100*len(X_test)/len(X):.1f}%)")
     print(f"{'='*70}")
-    print("⚠️  IMPORTANT: Test set is completely unseen and will be used for backtesting")
+    print("⚠️  IMPORTANT: Test set is out-of-sample and will be used for backtesting")
     print(f"{'='*70}\n")
 
     # Train model
