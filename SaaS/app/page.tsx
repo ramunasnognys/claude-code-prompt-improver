@@ -2,6 +2,44 @@ import { createClient } from '@/lib/supabase/server'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 import { EmailCapture } from '@/components/landing/EmailCapture'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Nano Banana - Transform Words into Stunning AI Art',
+  description: 'Create breathtaking images from simple text descriptions with AI-powered technology. No design skills needed. Start free with 10 images monthly.',
+  keywords: ['AI art generator', 'text to image', 'AI image generation', 'create AI art', 'image generator', 'AI art tool', 'text to art', 'AI design'],
+  authors: [{ name: 'Nano Banana' }],
+  creator: 'Nano Banana',
+  publisher: 'Nano Banana',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: 'https://nanobanana.com',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://nanobanana.com',
+    title: 'Nano Banana - Transform Words into Stunning AI Art',
+    description: 'Create breathtaking images from simple text descriptions with AI-powered technology. No design skills needed.',
+    siteName: 'Nano Banana',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nano Banana - Transform Words into Stunning AI Art',
+    description: 'Create breathtaking images from simple text descriptions with AI-powered technology. No design skills needed.',
+    creator: '@nanobanana',
+  },
+}
 
 export default async function Home() {
   const supabase = await createClient()
