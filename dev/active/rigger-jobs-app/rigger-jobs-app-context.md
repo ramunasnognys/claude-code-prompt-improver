@@ -1,6 +1,32 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-15 (Updated with resolved questions & facility layout)
+**Last Updated**: 2025-11-15 (Updated with resolved questions, facility layout, refactor review complete)
+
+## 🎯 Current Status: PLANNING COMPLETE - READY FOR IMPLEMENTATION
+
+**Phase**: Strategic Planning ✅
+**Next Phase**: Phase 1 - Project Bootstrap
+**Git Commit**: `c0f779b` on branch `rigger`
+
+### Session Summary (2025-11-15)
+1. ✅ Created comprehensive strategic plan (3 documents, 1,283 lines)
+2. ✅ Resolved all critical questions (areas, shifts, teams, roles)
+3. ✅ Ran refactor-planner agent review
+4. ✅ Fixed critical issues from review (dependencies, missing tasks, concurrent edits)
+5. ✅ Committed plan to git
+6. **READY**: Can start Phase 1.1 (Initialize Next.js Project) immediately
+
+### What Was Accomplished This Session
+- **Strategic Plan**: Complete 7-phase implementation plan with 28 major tasks
+- **Refactor Review**: Comprehensive review identified & fixed critical issues
+- **Question Resolution**: All blocking questions answered with facility layout diagram
+- **Git Commit**: All plan documents safely committed to version control
+
+### Important Context for Next Session
+- **Project does NOT exist yet** - `~/Developer/workspace/rigger-jobs/` not created
+- **Start with Phase 1.1** - Initialize Next.js project is first task
+- **All questions resolved** - No blockers, ready to code
+- **Facility layout confirmed** - 24 areas from actual facility diagram provided by user
 
 ## Key Files & Their Purpose
 
@@ -356,3 +382,141 @@ NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://...clerk.accounts.dev
 
 1. **Photo Attachments**: Defer to post-MVP (add if requested during testing)
 2. **Bottom Sheet Library**: Use Radix Dialog (decision made during refactor review)
+
+---
+
+## 📝 Session Handoff Notes (Context Reset Prep)
+
+### Files Modified This Session
+1. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-plan.md` (571 lines)
+   - Complete 7-phase implementation plan
+   - 28 major tasks with acceptance criteria
+   - Technology decisions & rationale
+   - Risk assessment & mitigation
+
+2. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-context.md` (385 lines)
+   - This file - architectural decisions
+   - Data model explanations
+   - Integration points (Clerk ↔ Convex)
+   - Important gotchas & testing strategy
+
+3. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` (354 lines)
+   - Checklist format for all tasks
+   - Organized by phase
+   - All tasks currently unchecked (ready to start)
+
+### Git Status
+- **Branch**: `rigger`
+- **Last Commit**: `c0f779b` - "Add comprehensive strategic plan for rigger job management app"
+- **Committed**: All 3 plan documents (1,283 lines total)
+- **Uncommitted**: None (clean working directory for plan files)
+
+### Critical Decisions Made This Session
+
+1. **Facility Layout Confirmed**: User provided facility diagram showing exact area codes
+   - DU (Utility): 8 areas (DU010, DU110, DU120, DU310, DU320, DU410, DU420, DU510)
+   - DP (Processing): 11 areas (DP030, DP130, DP140, DP230, DP240, DP330, DP340, DP530, DP540, DP730, DP740)
+   - DW: 4 areas (DW050, DW150, DW250, DW350)
+
+2. **Shift Times Defined**: Day 07:00-19:00, Night 19:00-07:00 (12-hour shifts, Norway time)
+   - "Today" = current shift (not calendar day)
+   - Activity queries filter by shift start time
+
+3. **Concurrent Edit Protection**: Optimistic locking with version field
+   - Every mutation checks version before update
+   - Version incremented on success
+   - Toast warning shown if version mismatch (another user edited)
+
+4. **Activity Event Archival**: 30-day TTL to prevent database bloat
+   - Convex cron job archives old events
+   - Prevents performance issues with 1000+ events/day
+
+5. **No User Roles**: Foremen and assistants have identical permissions
+   - Removed `role` field from users table
+   - Simplifies auth logic
+
+### Refactor Review Findings (All Fixed)
+
+**Critical Issues Fixed**:
+1. ✅ Reordered Phase 1.4 - user schema now created before webhook (dependency fix)
+2. ✅ Added missing tasks: env.ts validation, constants.ts, ngrok, error boundaries
+3. ✅ Added concurrent edit handling with version field
+4. ✅ Specified Radix Dialog for bottom sheet (removed ambiguity)
+5. ✅ Added activity event archival strategy
+6. ✅ Enhanced testing requirements (6 users, <1s updates)
+
+### Next Immediate Steps (Phase 1.1)
+
+**Command to run first**:
+```bash
+cd ~/Developer/workspace
+npx create-next-app@latest rigger-jobs
+```
+
+**Selections for prompts**:
+- TypeScript: Yes
+- ESLint: Yes
+- Tailwind CSS: Yes
+- `src/` directory: No
+- App Router: Yes
+- Import alias: @/* (default)
+
+**Then install dependencies**:
+```bash
+cd rigger-jobs
+npm install convex @clerk/nextjs react-hook-form zod sonner date-fns lucide-react
+```
+
+**Then create initial files**:
+1. `lib/env.ts` - Zod env validation
+2. `lib/constants.ts` - 24 area codes, delay reasons, shift times
+3. Update `tailwind.config.ts` - mobile breakpoints
+
+### Blockers: NONE
+
+All critical questions resolved. Ready to start implementation immediately.
+
+### Testing Approach for Phase 1
+
+- Phase 1.1: Verify `npm run dev` works after setup
+- Phase 1.2: Check Convex dashboard shows connected project
+- Phase 1.3: Test Clerk sign-in flow works
+- Phase 1.4: Verify new Clerk user appears in Convex users table (use ngrok for webhook)
+
+### Performance Targets
+
+- Real-time updates: <1 second propagation
+- Concurrent users: Test with 6 simultaneous users
+- Initial load: <5 seconds on mobile
+- Touch targets: Minimum 44px × 44px
+
+### Reference Projects
+
+- `~/Developer/workspace/elite-next-clerk-convex-starter/` - Similar stack, reference for Clerk+Convex setup
+- Facility layout diagram provided by user (stored in session image, shows exact area codes)
+
+### Commands for Next Session
+
+**To view plan**:
+```bash
+cat dev/active/rigger-jobs-app/rigger-jobs-app-plan.md
+```
+
+**To view tasks checklist**:
+```bash
+cat dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md
+```
+
+**To start Phase 1**:
+```bash
+cd ~/Developer/workspace
+# Follow Phase 1.1 steps in tasks.md
+```
+
+### Unfinished Work: NONE
+
+Planning phase complete. No partially completed features. Clean slate for implementation.
+
+---
+
+**🎯 HANDOFF SUMMARY**: Strategic planning complete. All questions resolved. 3 comprehensive plan documents created and committed to git. Ready to start Phase 1.1 (Initialize Next.js Project) immediately. No blockers.
