@@ -101,13 +101,13 @@
 - [x] Verify chronological order (newest first), archival tested
 
 ### 2.6 Handover Query
-- [ ] Create `convex/handover.ts`
-- [ ] Implement `getHandoverData` query (group jobs by area code: DU010, DP030, etc.)
-- [ ] Per area: separate completed, in_progress, delayed (with reasons), new jobs
-- [ ] Include job counts, team assignments, area module type (DU/DP/DW)
-- [ ] Group by module for better organization (all DU together, all DP together, etc.)
-- [ ] Test data structure matches handover mockup
-- [ ] Verify performance with 50+ jobs across 24 areas
+- [x] Create `convex/handover.ts`
+- [x] Implement `getHandoverData` query (group jobs by area code: DU010, DP030, etc.)
+- [x] Per area: separate completed, in_progress, delayed (with reasons), new jobs
+- [x] Include job counts, team assignments, area module type (DU/DP/DW)
+- [x] Group by module for better organization (all DU together, all DP together, etc.)
+- [x] Test data structure matches handover mockup
+- [x] Verify performance with 50+ jobs across 24 areas
 
 ---
 
