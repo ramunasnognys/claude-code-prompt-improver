@@ -78,14 +78,14 @@
 - [x] Verify real-time subscriptions work (update data, check query auto-updates)
 
 ### 2.4 Team Queries & Mutations
-- [ ] Create `convex/teams.ts`
-- [ ] Implement `listTeams` query (all teams ordered by name)
-- [ ] Implement `createTeam` mutation (supports "Team 1-20" or custom names)
-- [ ] Implement `getTeamStatus` query:
+- [x] Create `convex/teams.ts`
+- [x] Implement `listTeams` query (all teams ordered by name)
+- [x] Implement `createTeam` mutation (supports "Team 1-20" or custom names)
+- [x] Implement `getTeamStatus` query:
   - FREE = no jobs with status in ['new', 'in_progress', 'delayed']
   - BUSY = return area + job number for active job
-- [ ] Test team CRUD operations
-- [ ] Verify status logic with sample jobs
+- [x] Test team CRUD operations
+- [x] Verify status logic with sample jobs
 
 ### 2.5 Activity Queries
 - [ ] Create `convex/activity.ts`
