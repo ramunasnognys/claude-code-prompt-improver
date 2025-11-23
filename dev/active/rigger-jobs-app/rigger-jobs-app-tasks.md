@@ -138,16 +138,16 @@
 - [x] Test status display logic
 
 ### 3.4 QuickActionsModal Component
-- [ ] Create `components/QuickActionsModal.tsx`
-- [ ] Implement bottom sheet on mobile using Radix Dialog (full modal on desktop)
-- [ ] Add "Change Status" section (4 buttons: New, In Progress, Delayed, Done)
-- [ ] Add "Assign Team" section (grid of team buttons)
-- [ ] Add "Update Delay" section (dropdown with 7 reasons + textarea for note)
-- [ ] Connect to Convex mutations with version check (concurrent edit protection)
-- [ ] Implement optimistic UI updates
-- [ ] Show success toast on completion
-- [ ] Show warning toast if job was updated by another user (version mismatch)
-- [ ] Test all actions, including concurrent edits
+- [x] Create `components/QuickActionsModal.tsx`
+- [x] Implement bottom sheet on mobile using Radix Dialog (full modal on desktop)
+- [x] Add "Change Status" section (4 buttons: New, In Progress, Delayed, Done)
+- [x] Add "Assign Team" section (grid of team buttons)
+- [x] Add "Update Delay" section (dropdown with 7 reasons + textarea for note)
+- [x] Connect to Convex mutations with version check (concurrent edit protection)
+- [x] Implement optimistic UI updates
+- [x] Show success toast on completion
+- [x] Show warning toast if job was updated by another user (version mismatch)
+- [x] Test all actions, including concurrent edits
 
 ### 3.5 TodayTeamsPanel Component
 - [ ] Create `components/TodayTeamsPanel.tsx`
