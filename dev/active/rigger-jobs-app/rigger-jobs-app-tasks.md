@@ -114,13 +114,13 @@
 ## PHASE 3: Core UI Components
 
 ### 3.1 JobCard Component
-- [ ] Create `components/JobCard.tsx`
-- [ ] Display: description (truncated), area badge, requestedByName, team badge
-- [ ] Add priority indicator (urgent = red border/icon)
-- [ ] Add status-based border color
-- [ ] Ensure min 44px tap target
-- [ ] Add tap handler to open QuickActionsModal
-- [ ] Test rendering with sample data
+- [x] Create `components/JobCard.tsx`
+- [x] Display: description (truncated), area badge, requestedByName, team badge
+- [x] Add priority indicator (urgent = red border/icon)
+- [x] Add status-based border color
+- [x] Ensure min 44px tap target
+- [x] Add tap handler to open QuickActionsModal
+- [x] Test rendering with sample data
 
 ### 3.2 StatusColumn Component
 - [ ] Create `components/StatusColumn.tsx`
