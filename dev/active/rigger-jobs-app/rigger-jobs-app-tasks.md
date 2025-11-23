@@ -131,11 +131,11 @@
 - [x] Test with various job counts
 
 ### 3.3 TeamBadge Component
-- [ ] Create `components/TeamBadge.tsx`
-- [ ] Show team name, member count
-- [ ] Color code FREE (green) vs BUSY (blue)
-- [ ] Add tap handler to filter board
-- [ ] Test status display logic
+- [x] Create `components/TeamBadge.tsx`
+- [x] Show team name, member count
+- [x] Color code FREE (green) vs BUSY (blue)
+- [x] Add tap handler to filter board
+- [x] Test status display logic
 
 ### 3.4 QuickActionsModal Component
 - [ ] Create `components/QuickActionsModal.tsx`
