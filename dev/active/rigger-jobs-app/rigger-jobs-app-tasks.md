@@ -167,12 +167,12 @@
 ## PHASE 4: Main Features
 
 ### 4.1 Board Page
-- [ ] Create `app/page.tsx` (or `app/board/page.tsx`)
-- [ ] Protect route with Clerk auth
-- [ ] Fetch jobs using `useQuery(api.jobs.listJobs)`
-- [ ] Render four StatusColumn components (New, In Progress, Delayed, Done)
-- [ ] Add TodayTeamsPanel at top
-- [ ] Implement QuickActionsModal state management
+- [x] Create `app/page.tsx` (or `app/board/page.tsx`)
+- [x] Protect route with Clerk auth
+- [x] Fetch jobs using `useQuery(api.jobs.listJobs)`
+- [x] Render four StatusColumn components (New, In Progress, Delayed, Done)
+- [x] Add TodayTeamsPanel at top
+- [x] Implement QuickActionsModal state management
 - [ ] Test real-time updates (open two browser windows, change job in one)
 
 ### 4.2 New Job Form
