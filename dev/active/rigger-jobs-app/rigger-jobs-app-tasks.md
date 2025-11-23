@@ -157,10 +157,10 @@
 - [x] Test team status logic (FREE vs BUSY)
 
 ### 3.6 ActivityEventCard Component
-- [ ] Create `components/ActivityEventCard.tsx`
-- [ ] Display timestamp, user name, action description
-- [ ] Color-code by event type (create=green, status=blue, delay=red, etc.)
-- [ ] Test with sample events
+- [x] Create `components/ActivityEventCard.tsx`
+- [x] Display timestamp, user name, action description
+- [x] Color-code by event type (create=green, status=blue, delay=red, etc.)
+- [x] Test with sample events
 
 ---
 
