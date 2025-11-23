@@ -1,90 +1,156 @@
 # Session Handoff - Rigger Jobs App
 
-**Date**: 2025-11-23 17:50 UTC
-**Session**: Phase 3.1-3.3 UI Components COMPLETE ✅
+**Date**: 2025-11-23 20:15 UTC
+**Session**: Phase 3 UI Components COMPLETE ✅
 **Git Branches**: `main` (components), `rigger` (docs)
-**Context Usage**: 127k/200k (64%)
+**Context Usage**: 126k/200k (63%)
 
 ---
 
-## ✅ PHASE 3.1-3.3 UI COMPONENTS COMPLETE
+## ✅ PHASE 3 COMPLETE - ALL 6 UI COMPONENTS IMPLEMENTED
 
 ### What Was Accomplished This Session
 
 **Phase 3.1: JobCard Component** ✅
 - Created `components/JobCard.tsx` (75 lines)
-- React.memo optimization for real-time performance
-- Status colors, priority indicator, team badge
+- React.memo optimization, status colors, priority indicator
 - Min 44px tap target + keyboard nav
-- Test page with all variations
+- Test page with 4 mock jobs
 - Commit: `e781486`
 
 **Phase 3.2: StatusColumn Component** ✅
 - Created `components/StatusColumn.tsx` (94 lines)
-- Kanban column with sticky header + count badge
-- Empty state, fixed 320px width for mobile
-- Vertical scroll, team lookup callback
-- Test page with full board layout
+- Kanban column with sticky header, count badge, empty state
+- Fixed 320px width for mobile horizontal scroll
+- Test page with full board layout (8 jobs)
 - Commit: `b0aab89`
 
 **Phase 3.3: TeamBadge Component** ✅
 - Created `components/TeamBadge.tsx` (86 lines)
 - FREE (green) / BUSY (blue) status colors
-- Keyboard nav, focus rings, accessibility
-- Text truncation for long team names
-- Test page with FREE/BUSY examples
+- Keyboard nav, accessibility, text truncation
+- Test page with 6 teams (3 FREE, 3 BUSY)
 - Commit: `4c33ae2`
+
+**Phase 3.4: QuickActionsModal Component** ✅
+- Created `components/QuickActionsModal.tsx` (296 lines)
+- Radix Dialog: bottom sheet mobile, centered desktop
+- 3 action sections (status, team, delay)
+- Convex mutations + toast notifications
+- Test page with 4 scenarios
+- Installed `@radix-ui/react-dialog`
+- Commit: `3a9e64e`
+
+**Phase 3.5: TodayTeamsPanel Component** ✅
+- Created `components/TodayTeamsPanel.tsx` (131 lines)
+- Collapsible panel with chevron animation
+- Team count summary badges ("X FREE / Y BUSY")
+- Default: open desktop, closed mobile
+- Test page with 20 teams, 11 jobs
+- Commit: `f7076f7`
+
+**Phase 3.6: ActivityEventCard Component** ✅
+- Created `components/ActivityEventCard.tsx` (145 lines)
+- 6 event types with color coding
+- Smart time formatting (relative/absolute)
+- Event icons with colored backgrounds
+- Test page with 8 events
+- Commit: `b66d945`
 
 ---
 
 ## 📂 FILES CREATED THIS SESSION
 
 ### Components (rigger-jobs repo, main branch)
-1. **components/JobCard.tsx** (75 lines) - Individual job card
-2. **components/StatusColumn.tsx** (94 lines) - Kanban column
-3. **components/TeamBadge.tsx** (86 lines) - Team status badge
+1. **components/JobCard.tsx** (75 lines)
+2. **components/StatusColumn.tsx** (94 lines)
+3. **components/TeamBadge.tsx** (86 lines)
+4. **components/QuickActionsModal.tsx** (296 lines)
+5. **components/TodayTeamsPanel.tsx** (131 lines)
+6. **components/ActivityEventCard.tsx** (145 lines)
+
+**Total Production Code**: 827 lines
 
 ### Test Pages (rigger-jobs repo, main branch)
-4. **app/test-jobcard/page.tsx** (144 lines) - JobCard test with mock data
-5. **app/test-statuscolumn/page.tsx** (272 lines) - Full Kanban board test
-6. **app/test-teambadge/page.tsx** (255 lines) - TeamBadge FREE/BUSY test
+7. **app/test-jobcard/page.tsx** (144 lines)
+8. **app/test-statuscolumn/page.tsx** (272 lines)
+9. **app/test-teambadge/page.tsx** (255 lines)
+10. **app/test-quickactionsmodal/page.tsx** (310 lines)
+11. **app/test-todayteamspanel/page.tsx** (332 lines)
+12. **app/test-activityeventcard/page.tsx** (310 lines)
+
+**Total Test Code**: 1,596 lines
 
 ### Documentation (prompt-improver repo, rigger branch)
-7. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md** - Updated checkboxes
-8. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md** - Added Phase 3 implementation details
+13. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md** - Updated all Phase 3 checkboxes
+14. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md** - Complete Phase 3 documentation
 
 ---
 
-## 🔑 KEY IMPLEMENTATION DECISIONS
+## 🔑 CRITICAL IMPLEMENTATION DECISIONS
 
-### 1. Component Props Design
-- **JobCard**: Receives `job` + optional `team` (parent fetches team)
-- **StatusColumn**: Receives `jobs` array + `teams` array (presentational)
-- **TeamBadge**: Receives `team` + optional `activeJob` (parent computes first active job)
-- **Rationale**: Keeps components presentational, reusable, no Convex queries inside
+### 1. Presentational Component Pattern (IMPORTANT)
+**All components receive data as props - no Convex queries inside**:
+- Prevents real-time subscription conflicts
+- Makes components reusable and testable
+- Parent components manage data fetching
 
-### 2. Performance Optimizations
-- All 3 components use React.memo
-- Prevents re-renders when other jobs/teams update
-- Critical for 50+ jobs × 6 concurrent users real-time
+### 2. Performance: React.memo Everywhere
+- All 6 components use `React.memo`
+- Critical for 50+ jobs × 6 concurrent users
+- Memoized callbacks with `useCallback`
 
-### 3. Keyboard Navigation
-- All interactive components support Enter/Space keys
-- onKeyDown handlers with preventDefault
-- tabIndex={0} for keyboard focus
-- Focus rings with status-specific colors
+### 3. Consistent Keyboard Navigation
+- All interactive components: `Enter` and `Space` keys
+- `tabIndex={0}` for focus
+- `focus-visible:ring-2` for focus rings
+- Comprehensive `aria-label` attributes
 
-### 4. Accessibility
-- Comprehensive aria-labels with full context
-- sr-only text for screen readers
-- aria-hidden on decorative icons
-- Min 44px tap targets throughout
+### 4. Status Color System (Consistent)
+```typescript
+new: "gray"
+in_progress: "blue"
+delayed: "red"
+done: "green"
+```
 
-### 5. Text Truncation Strategy
-- line-clamp-2 for job descriptions
-- truncate class for team names
-- min-w-0 on flex containers (prevents overflow)
-- flex-shrink-0 on icons (always visible)
+### 5. Event Type Colors
+```typescript
+job_created: "green" (Plus icon)
+status_changed: "blue" (RefreshCw icon)
+team_assigned: "purple" (Users icon)
+team_swapped: "orange" (Repeat icon)
+delay_updated: "red" (AlertCircle icon)
+job_updated: "gray" (Edit icon)
+```
+
+### 6. Responsive Modal Pattern
+Mobile: Bottom sheet (`fixed bottom-0`)
+Desktop: Centered modal (`md:top-1/2 md:left-1/2`)
+
+### 7. Min 44px Tap Targets
+All buttons, cards, badges meet touch target minimum
+
+---
+
+## 📊 GIT COMMITS
+
+### rigger-jobs (main branch) - 6 commits
+- `b66d945` - Phase 3.6 ActivityEventCard - PHASE 3 COMPLETE
+- `f7076f7` - Phase 3.5 TodayTeamsPanel
+- `3a9e64e` - Phase 3.4 QuickActionsModal
+- `4c33ae2` - Phase 3.3 TeamBadge
+- `b0aab89` - Phase 3.2 StatusColumn
+- `e781486` - Phase 3.1 JobCard
+
+### prompt-improver (rigger branch) - 7 commits
+- `53e612b` - Phase 3.6 complete - PHASE 3 COMPLETE ✅
+- `94174d6` - Phase 3.5 complete
+- `e310757` - Phase 3.4 complete
+- `65458d0` - Phase 3.3 complete
+- `422fded` - Phase 3.2 complete
+- `89fa9ec` - Phase 3.1 complete
+- `bf00652` - Phase 3.1-3.3 context update
 
 ---
 
@@ -92,61 +158,97 @@
 
 ### Git Status
 **rigger-jobs (main branch)**: ✅ ALL COMMITTED
-- `4c33ae2` - Phase 3.3 TeamBadge
-- `b0aab89` - Phase 3.2 StatusColumn
-- `e781486` - Phase 3.1 JobCard
+- All 6 components committed
+- All 6 test pages committed
+- No uncommitted changes
 
 **prompt-improver (rigger branch)**: ✅ ALL COMMITTED
-- `bf00652` - docs: update context for Phase 3.1-3.3
-- `65458d0` - docs: mark Phase 3.3 complete
-- `422fded` - docs: mark Phase 3.2 complete
-- `89fa9ec` - docs: mark Phase 3.1 complete
+- Tasks file updated
+- Context file updated
+- No uncommitted changes
 
 ### TypeScript Compilation
-- ✅ All files compile successfully (strict mode)
-- ✅ No type errors
+✅ **All files compile successfully** (strict mode, no errors)
 
 ### Test Pages Available
 - http://localhost:3001/test-jobcard
 - http://localhost:3001/test-statuscolumn
 - http://localhost:3001/test-teambadge
+- http://localhost:3001/test-quickactionsmodal
+- http://localhost:3001/test-todayteamspanel
+- http://localhost:3001/test-activityeventcard
+
+### Dev Server
+- Command: `npm run dev`
+- URL: http://localhost:3001
+- Currently running in background (shells 0a08ef and d5eae7)
 
 ---
 
-## 🚀 NEXT IMMEDIATE STEPS
+## 🚀 NEXT IMMEDIATE STEPS: PHASE 4
 
-### Step 1: Phase 3.4 - QuickActionsModal Component
-**Complexity**: HIGH (bottom sheet on mobile, full modal on desktop)
+### Step 1: Phase 4.1 - Board Page (MAIN INTEGRATION)
+**Complexity**: HIGH (integrates all Phase 3 components with real Convex data)
+
+**File to Create**: `app/page.tsx` or `app/board/page.tsx`
 
 **Requirements**:
-- Radix Dialog for modal/sheet primitives
-- Bottom sheet on mobile (<768px)
-- Full modal on desktop (≥768px)
-- Three action sections:
-  1. Change Status (4 buttons: New, In Progress, Delayed, Done)
-  2. Assign Team (grid of team buttons)
-  3. Update Delay (dropdown + textarea)
-- Convex mutations with version check (concurrent edit protection)
-- Optimistic UI updates
-- Success/error toast notifications
-- Close on success
+1. Protect route with Clerk `<SignedIn>` component
+2. Fetch data with Convex:
+   ```tsx
+   const jobs = useQuery(api.jobs.listJobs);
+   const teams = useQuery(api.teams.listTeams);
+   ```
+3. Filter jobs by status:
+   ```tsx
+   const newJobs = jobs?.filter(j => j.status === 'new') || [];
+   const inProgressJobs = jobs?.filter(j => j.status === 'in_progress') || [];
+   const delayedJobs = jobs?.filter(j => j.status === 'delayed') || [];
+   const doneJobs = jobs?.filter(j => j.status === 'done') || [];
+   ```
+4. QuickActionsModal state:
+   ```tsx
+   const [modalOpen, setModalOpen] = useState(false);
+   const [selectedJob, setSelectedJob] = useState<Doc<"jobRequests"> | null>(null);
+   ```
+5. Render components:
+   - `<TodayTeamsPanel>` at top
+   - 4 `<StatusColumn>` components (horizontal scroll)
+   - `<QuickActionsModal>` (conditional)
 
-**Files to Create**:
-- `components/QuickActionsModal.tsx`
-- Test page (optional, can test inline on board)
+**Component Integration Example**:
+```tsx
+<TodayTeamsPanel
+  teams={teams || []}
+  jobs={jobs || []}
+  onTeamClick={handleTeamFilter}
+/>
 
-**Dependencies Needed**:
-- Check if Radix Dialog installed: `@radix-ui/react-dialog`
-- sonner toast library (already installed)
+<div className="flex gap-4 overflow-x-auto">
+  <StatusColumn status="new" jobs={newJobs} teams={teams} onJobClick={openModal} />
+  <StatusColumn status="in_progress" jobs={inProgressJobs} teams={teams} onJobClick={openModal} />
+  <StatusColumn status="delayed" jobs={delayedJobs} teams={teams} onJobClick={openModal} />
+  <StatusColumn status="done" jobs={doneJobs} teams={teams} onJobClick={openModal} />
+</div>
 
-### Step 2: Phase 3.5 - TodayTeamsPanel
-Build collapsible panel with team cards grid
+{selectedJob && (
+  <QuickActionsModal
+    isOpen={modalOpen}
+    onClose={() => setModalOpen(false)}
+    job={selectedJob}
+    teams={teams || []}
+  />
+)}
+```
 
-### Step 3: Phase 3.6 - ActivityEventCard
-Simple event card component
+### Step 2: Phase 4.2 - New Job Form
+Create `app/jobs/new/page.tsx` with form fields
 
-### Step 4: Phase 4.1 - Main Board Page
-Integrate all components with real Convex data
+### Step 3: Phase 4.3 - Top Navigation
+Create `components/TopNav.tsx` with logo, actions, UserButton
+
+### Step 4: Phase 4.4 - Bottom Navigation (Mobile)
+Create `components/BottomNav.tsx` with Board/Activity/Handover tabs
 
 ---
 
@@ -154,15 +256,21 @@ Integrate all components with real Convex data
 
 **Phase 1**: ✅ COMPLETE (Project Bootstrap)
 **Phase 2**: ✅ COMPLETE (Convex Backend)
-**Phase 3**: ⏳ 3 of 6 COMPLETE (Core UI Components)
-- 3.1 JobCard: ✅ COMPLETE
-- 3.2 StatusColumn: ✅ COMPLETE
-- 3.3 TeamBadge: ✅ COMPLETE
-- 3.4 QuickActionsModal: ⏳ NEXT
-- 3.5 TodayTeamsPanel: ⏳ TODO
-- 3.6 ActivityEventCard: ⏳ TODO
+**Phase 3**: ✅ COMPLETE (Core UI Components) - **ALL 6 COMPONENTS DONE**
+- 3.1 JobCard: ✅
+- 3.2 StatusColumn: ✅
+- 3.3 TeamBadge: ✅
+- 3.4 QuickActionsModal: ✅
+- 3.5 TodayTeamsPanel: ✅
+- 3.6 ActivityEventCard: ✅
 
-**Phase 4-7**: ⏳ TODO (Main Features, Polish, Deploy)
+**Phase 4**: ⏳ TODO (Main Features)
+- 4.1 Board Page: ⏳ NEXT
+- 4.2 New Job Form: ⏳ TODO
+- 4.3 Top Navigation: ⏳ TODO
+- 4.4 Bottom Navigation: ⏳ TODO
+
+**Phase 5-7**: ⏳ TODO (Activity, Handover, Polish, Deploy)
 
 ---
 
@@ -172,82 +280,92 @@ Integrate all components with real Convex data
 ~/Developer/workspace/prompt-improver/rigger-jobs/
 ```
 
-**Working Directories**:
-- Components: `components/`
-- Test pages: `app/test-*/`
-- Convex backend: `convex/`
+**Key Directories**:
+- `components/` - All 6 UI components
+- `app/test-*/` - All 6 test pages
+- `convex/` - Backend (jobs, teams, activity, handover)
+- `lib/` - Constants, utilities, env validation
 
 ---
 
 ## 🚫 BLOCKERS: NONE
 
-All Phase 3.1-3.3 components complete and tested. Ready for Phase 3.4 QuickActionsModal.
+All Phase 3 components complete and tested. Ready for Phase 4 integration with real Convex data.
 
 ---
 
 ## 📖 REFERENCE COMMANDS
 
-### Verify Components
+### Verify Project State
 ```bash
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-npm run dev  # http://localhost:3001
-# Visit test pages:
-# /test-jobcard
-# /test-statuscolumn
-# /test-teambadge
+git status                    # Should be clean
+npm run dev                   # http://localhost:3001
+npx tsc --noEmit             # TypeScript check
 ```
 
-### Check Dependencies
-```bash
-npm list @radix-ui/react-dialog  # Check if installed for Phase 3.4
-npm list sonner  # Already installed
-```
+### Test All Components
+- Visit test pages (listed above)
+- All 6 components working independently
+- Ready for integration
 
-### TypeScript Check
-```bash
-npx tsc --noEmit  # Should pass with no errors
-```
+### Start Phase 4
+1. Read `rigger-jobs-app-context.md` for detailed Phase 3 info
+2. Check `rigger-jobs-app-tasks.md` for Phase 4 tasks
+3. Create `app/page.tsx` or `app/board/page.tsx`
+4. Integrate all components with real Convex data
 
 ---
 
 ## 🔄 AFTER CONTEXT RESET
 
 1. ✅ Read this file first (SESSION-HANDOFF.md)
-2. ✅ Review detailed context: `rigger-jobs-app-context.md` (has Phase 3 implementation details)
-3. ✅ All work committed - no action needed
-4. 🚀 Start Phase 3.4: Create `components/QuickActionsModal.tsx`
-5. ✅ Mark tasks in `rigger-jobs-app-tasks.md` as you complete them
+2. ✅ Read `rigger-jobs-app-context.md` for detailed implementation notes
+3. ✅ Review `rigger-jobs-app-tasks.md` for task checklist
+4. ✅ All work committed - no action needed
+5. 🚀 Start Phase 4.1: Create Board Page with component integration
+6. ✅ Mark tasks in `rigger-jobs-app-tasks.md` as you complete them
 
-## 💡 Quick Tips for Phase 3.4
+---
 
-### QuickActionsModal Implementation
-- Use Radix Dialog primitive
-- Responsive: bottom sheet mobile, full modal desktop
-- Media query at 768px breakpoint
-- Three sections with clear visual separation
-- Version check on all mutations (prevent concurrent edits)
-- Optimistic UI: update locally before server confirms
-- Toast on success/error using sonner
+## 💡 Quick Tips for Phase 4.1 Board Page
 
-### Pattern for Radix Dialog
+### Data Fetching Pattern
 ```tsx
-import * as Dialog from '@radix-ui/react-dialog';
+"use client";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
-<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-  <Dialog.Portal>
-    <Dialog.Overlay />
-    <Dialog.Content className={cn(
-      // Mobile: bottom sheet
-      "fixed bottom-0 left-0 right-0 md:relative",
-      // Desktop: centered modal
-      "md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
-    )}>
-      {/* Actions here */}
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
+const jobs = useQuery(api.jobs.listJobs);
+const teams = useQuery(api.teams.listTeams);
+```
+
+### Loading State
+```tsx
+if (jobs === undefined || teams === undefined) {
+  return <div>Loading...</div>;
+}
+```
+
+### Team Filtering (Optional)
+```tsx
+const [teamFilter, setTeamFilter] = useState<Id<"teams"> | null>(null);
+const filteredJobs = teamFilter
+  ? jobs.filter(j => j.assignedTeamId === teamFilter)
+  : jobs;
+```
+
+### Modal State
+```tsx
+const [modalOpen, setModalOpen] = useState(false);
+const [selectedJob, setSelectedJob] = useState<Doc<"jobRequests"> | null>(null);
+
+const openModal = (job: Doc<"jobRequests">) => {
+  setSelectedJob(job);
+  setModalOpen(true);
+};
 ```
 
 ---
 
-**PHASE 3.1-3.3 COMPLETE ✅ - CONTINUE WITH PHASE 3.4 QUICKACTIONSMODAL** 🚀
+**PHASE 3 COMPLETE ✅ - 6/6 COMPONENTS READY - CONTINUE WITH PHASE 4 BOARD PAGE** 🚀
