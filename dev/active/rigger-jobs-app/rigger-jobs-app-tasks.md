@@ -123,12 +123,12 @@
 - [x] Test rendering with sample data
 
 ### 3.2 StatusColumn Component
-- [ ] Create `components/StatusColumn.tsx`
-- [ ] Display status header with count
-- [ ] Render vertical list of JobCards
-- [ ] Add empty state message
-- [ ] Make horizontal scrollable on mobile (flexbox)
-- [ ] Test with various job counts
+- [x] Create `components/StatusColumn.tsx`
+- [x] Display status header with count
+- [x] Render vertical list of JobCards
+- [x] Add empty state message
+- [x] Make horizontal scrollable on mobile (flexbox)
+- [x] Test with various job counts
 
 ### 3.3 TeamBadge Component
 - [ ] Create `components/TeamBadge.tsx`
