@@ -15,11 +15,11 @@ Build mobile-first web app replacing paper book for tracking ~50 riggers across 
 - Night shift: 19:00 - 07:00
 
 **Facility Areas** (24 total):
-- **DU** (Utility Module): DU010, DU110, DU120, DU310, DU320, DU410, DU420, DU510
+- **DU** (Utility Module): DU110, DU120, DU310, DU320, DU410, DU420, DU510
 - **DP** (Processing Module): DP030, DP130, DP140, DP230, DP240, DP330, DP340, DP530, DP540, DP730, DP740
 - **DW**: DW050, DW150, DW250, DW350
 
----
+---å
 
 ## Current State Analysis
 

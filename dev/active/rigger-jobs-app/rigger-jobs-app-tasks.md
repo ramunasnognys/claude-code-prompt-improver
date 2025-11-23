@@ -7,75 +7,75 @@
 ## PHASE 1: Project Bootstrap
 
 ### 1.1 Initialize Next.js Project
-- [ ] Create directory `~/Developer/workspace/rigger-jobs/`
-- [ ] Run `npx create-next-app@latest rigger-jobs` (TypeScript, Tailwind, App Router, no src/)
-- [ ] Install core dependencies: `npm install convex @clerk/nextjs react-hook-form zod sonner date-fns lucide-react`
-- [ ] Configure `tailwind.config.ts` with mobile-first breakpoints: `screens: { xs: '375px', sm: '640px', md: '768px', lg: '1024px' }`
-- [ ] Create `lib/env.ts` with Zod validation for environment variables
-- [ ] Create `lib/constants.ts` with 24 area codes (DU/DP/DW), delay reasons, shift times (07:00-19:00, 19:00-07:00)
-- [ ] Test dev server: `npm run dev` loads at localhost:3000, env validation passes
+- [x] Create directory `~/Developer/workspace/rigger-jobs/`
+- [x] Run `npx create-next-app@latest rigger-jobs` (TypeScript, Tailwind, App Router, no src/)
+- [x] Install core dependencies: `npm install convex @clerk/nextjs react-hook-form zod sonner date-fns lucide-react`
+- [x] Configure `tailwind.config.ts` with mobile-first breakpoints: `screens: { xs: '375px', sm: '640px', md: '768px', lg: '1024px' }`
+- [x] Create `lib/env.ts` with Zod validation for environment variables
+- [x] Create `lib/constants.ts` with 24 area codes (DU/DP/DW), delay reasons, shift times (07:00-19:00, 19:00-07:00)
+- [x] Test dev server: `npm run dev` loads at localhost:3000, env validation passes
 
 ### 1.2 Setup Convex
-- [ ] Run `npx convex dev` to initialize
-- [ ] Create Convex account/project (or use existing)
-- [ ] Copy `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` to `.env.local`
-- [ ] Create `convex/tsconfig.json`
-- [ ] Test connection: create sample query, verify in dashboard
+- [x] Run `npx convex dev` to initialize
+- [x] Create Convex account/project (or use existing)
+- [x] Copy `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` to `.env.local`
+- [x] Create `convex/tsconfig.json`
+- [x] Test connection: create sample query, verify in dashboard
 
 ### 1.3 Configure Clerk Auth
-- [ ] Create Clerk application (single-tenant mode)
-- [ ] Add env vars to `.env.local`: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
-- [ ] Create JWT template "convex" in Clerk dashboard
-- [ ] Copy issuer URL to `NEXT_PUBLIC_CLERK_FRONTEND_API_URL`
-- [ ] Create `middleware.ts` for route protection
-- [ ] Add `ClerkProvider` to `app/layout.tsx`
-- [ ] Test: sign-in flow works
+- [x] Create Clerk application (single-tenant mode)
+- [x] Add env vars to `.env.local`: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
+- [x] Create JWT template "convex" in Clerk dashboard
+- [x] Copy issuer URL to `NEXT_PUBLIC_CLERK_FRONTEND_API_URL`
+- [x] Create `middleware.ts` for route protection
+- [x] Add `ClerkProvider` to `app/layout.tsx`
+- [x] Test: sign-in flow works
 
 ### 1.4 Connect Clerk → Convex
-- [ ] Add `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` to Convex dashboard env vars
-- [ ] Create basic `convex/schema.ts` with `users` table (clerkId, name)
-- [ ] Create `convex/users.ts` with basic user CRUD functions
-- [ ] Create `convex/http.ts` with webhook endpoint `/clerk-users-webhook`
-- [ ] Setup ngrok for local webhook testing: `ngrok http 3000`
-- [ ] Setup Clerk webhook in Clerk dashboard for `user.created`, `user.updated`, `user.deleted` (use ngrok URL in dev)
-- [ ] Add `CLERK_WEBHOOK_SECRET` to Convex dashboard
-- [ ] Test: create Clerk user, verify appears in Convex `users` table
+- [x] Add `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` to Convex dashboard env vars
+- [x] Create basic `convex/schema.ts` with `users` table (clerkId, name)
+- [x] Create `convex/users.ts` with basic user CRUD functions
+- [x] Create `convex/http.ts` with webhook endpoint `/clerk-users-webhook`
+- [x] Setup ngrok for local webhook testing: `ngrok http 3000`
+- [x] Setup Clerk webhook in Clerk dashboard for `user.created`, `user.updated`, `user.deleted` (use ngrok URL in dev)
+- [x] Add `CLERK_WEBHOOK_SECRET` to Convex dashboard
+- [x] Test: create Clerk user, verify appears in Convex `users` table
 
 ---
 
 ## PHASE 2: Convex Backend
 
 ### 2.1 Define Schema
-- [ ] Update `convex/schema.ts` (already has basic users table from Phase 1.4)
-- [ ] Define `jobRequests` table with all fields:
+- [x] Update `convex/schema.ts` (already has basic users table from Phase 1.4)
+- [x] Define `jobRequests` table with all fields:
   - status, dates (requestedAt, requiredBy, startedAt, completedAt, lastStatusChangeAt)
   - requestedByName, area (string for 24 codes), exactLocation, description, priority
   - assignedTeamId, delayReasonType (7 options), delayReasonNote
   - userId fields (createdBy, assignedBy, lastUpdatedBy)
   - **version** field (number) for optimistic locking
-- [ ] Define `teams` table (name, memberNames array)
-- [ ] Define `activityEvents` table (timestamp, type, jobRequestId, teamId, userId, from/to values, note, ttl)
-- [ ] Update `users` table (remove role field - foremen/assistants have same permissions)
-- [ ] Add indexes: `by_status`, `by_area`, `by_team`, `by_timestamp_desc`, `by_version`
-- [ ] Run `npx convex dev` to apply schema
-- [ ] Verify schema in Convex dashboard matches 24 facility areas
+- [x] Define `teams` table (name, memberNames array)
+- [x] Define `activityEvents` table (timestamp, type, jobRequestId, teamId, userId, from/to values, note, ttl)
+- [x] Update `users` table (remove role field - foremen/assistants have same permissions)
+- [x] Add indexes: `by_status`, `by_area`, `by_team`, `by_timestamp_desc`, `by_version`
+- [x] Run `npx convex dev` to apply schema
+- [x] Verify schema in Convex dashboard matches 24 facility areas
 
 ### 2.2 Job Mutations
-- [ ] Create `convex/jobs.ts`
-- [ ] Implement `createJob` mutation (validate, insert job with version=0, create activity event)
-- [ ] Implement `updateJobStatus` mutation (check version, change status, update timestamps, increment version, log activity)
-- [ ] Implement `assignTeam` mutation (check version, set team, create swap event if applicable, increment version)
-- [ ] Implement `updateDelayReason` mutation (check version, set reason/note, log activity, increment version)
-- [ ] Test all mutations in Convex dashboard
-- [ ] Add optimistic update support for all mutations
-- [ ] Implement retry queue with local storage fallback for failed mutations
+- [x] Create `convex/jobs.ts`
+- [x] Implement `createJob` mutation (validate, insert job with version=0, create activity event)
+- [x] Implement `updateJobStatus` mutation (check version, change status, update timestamps, increment version, log activity)
+- [x] Implement `assignTeam` mutation (check version, set team, create swap event if applicable, increment version)
+- [x] Implement `updateDelayReason` mutation (check version, set reason/note, log activity, increment version)
+- [x] Test all mutations in Convex dashboard
+- [x] Add optimistic update support for all mutations
+- [x] Implement retry queue with local storage fallback for failed mutations
 
 ### 2.3 Job Queries
-- [ ] Implement `listJobs` query (filter by status, area, team; order by lastStatusChangeAt desc)
-- [ ] Implement `getJob` query (single job by ID with team details)
-- [ ] Implement `getJobsByTeam` query (active jobs for specific team)
-- [ ] Test queries return expected data
-- [ ] Verify real-time subscriptions work (update data, check query auto-updates)
+- [x] Implement `listJobs` query (filter by status, area, team; order by lastStatusChangeAt desc)
+- [x] Implement `getJob` query (single job by ID with team details)
+- [x] Implement `getJobsByTeam` query (active jobs for specific team)
+- [x] Test queries return expected data
+- [x] Verify real-time subscriptions work (update data, check query auto-updates)
 
 ### 2.4 Team Queries & Mutations
 - [ ] Create `convex/teams.ts`

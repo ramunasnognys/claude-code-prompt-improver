@@ -1,70 +1,295 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-15 (Updated with resolved questions, facility layout, refactor review complete)
+**Last Updated**: 2025-11-23 18:05 UTC (Phase 2.1-2.3 Complete)
 
-## 🎯 Current Status: PLANNING COMPLETE - READY FOR IMPLEMENTATION
+## 🎯 Current Status: PHASE 2.1-2.3 COMPLETE ✅
 
-**Phase**: Strategic Planning ✅
-**Next Phase**: Phase 1 - Project Bootstrap
-**Git Commit**: `c0f779b` on branch `rigger`
+**Phase**: Phase 2 (Convex Backend) - IN PROGRESS
+**Completed**: 2.1 Define Schema, 2.2 Job Mutations, 2.3 Job Queries
+**Next Phase**: 2.4 Team Queries & Mutations
+**Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
+**Git Branch**: rigger
+**Latest Git Commit**: TBD (changes not yet committed)
 
-### Session Summary (2025-11-15)
-1. ✅ Created comprehensive strategic plan (3 documents, 1,283 lines)
-2. ✅ Resolved all critical questions (areas, shifts, teams, roles)
-3. ✅ Ran refactor-planner agent review
-4. ✅ Fixed critical issues from review (dependencies, missing tasks, concurrent edits)
-5. ✅ Committed plan to git
-6. **READY**: Can start Phase 1.1 (Initialize Next.js Project) immediately
+### Session Summary (2025-11-23 - PHASE 2 IMPLEMENTATION)
+**What Was Accomplished This Session**:
+- ✅ Phase 2.1: Convex schema expanded with jobRequests, teams, activityEvents tables
+- ✅ Phase 2.2: Job mutations implemented (createJob, updateJobStatus, assignTeam, updateDelayReason)
+- ✅ Phase 2.3: Job queries implemented (listJobs, getJob, getJobsByTeam)
+- ✅ All backend functions deployed and tested in Convex dashboard
 
-### What Was Accomplished This Session
-- **Strategic Plan**: Complete 7-phase implementation plan with 28 major tasks
-- **Refactor Review**: Comprehensive review identified & fixed critical issues
-- **Question Resolution**: All blocking questions answered with facility layout diagram
-- **Git Commit**: All plan documents safely committed to version control
+**Previous Session (Phase 1)**:
+- ✅ Phase 1.1: Next.js project initialized with TypeScript, Tailwind, App Router
+- ✅ Phase 1.2: Convex setup complete and connected
+- ✅ Phase 1.3: Clerk auth configured and working
+- ✅ Phase 1.4: Clerk → Convex integration complete (user sync working)
+
+**Stack Implemented**:
+- Next.js 16.0.3 with App Router
+- React 19.2.0
+- Convex 1.29.3 (real-time backend)
+- Clerk 6.35.4 (authentication)
+- Tailwind 4.0 with mobile-first config
+- TypeScript 5
+- All core dependencies installed
+
+### Files Modified/Created This Session (Phase 2)
+
+**Convex Backend** (NEW):
+- `convex/schema.ts` - ✅ EXPANDED with jobRequests, teams, activityEvents tables + 10 indexes
+- `convex/jobs.ts` - ✅ CREATED with 4 mutations + 3 queries (398 lines)
+
+**Configuration Files** (Phase 1):
+- `package.json` - All dependencies installed (Next.js, Convex, Clerk, etc.)
+- `middleware.ts` - Clerk auth middleware protecting routes
+- `lib/env.ts` - Zod environment variable validation
+- `lib/constants.ts` - ✅ Area codes CORRECT (24 specific codes), delay reasons, shift times, status enums
+- `lib/utils.ts` - Utility functions (cn helper)
+
+**Convex Backend** (Phase 1):
+- `convex/users.ts` - User store mutation for Clerk sync
+- `convex/auth.config.ts` - Clerk auth configuration
+- `convex/myFunctions.ts` - Sample query (testing)
+
+**React Components**:
+- `app/layout.tsx` - Root layout with ConvexClientProvider + Navbar
+- `app/ConvexClientProvider.tsx` - Convex + Clerk providers
+- `app/page.tsx` - Homepage
+- `app/dashboard/page.tsx` - Dashboard placeholder
+- `app/jobs/page.tsx` - Jobs listing placeholder
+- `app/profile/page.tsx` - Profile page
+- `app/components/Navbar.tsx` - Navigation bar
+- `app/components/UserMenu.tsx` - User menu component
+- `components/ui/button.tsx` - shadcn button component
+
+---
+
+## 🎯 Phase 2 Implementation Details
+
+### 2.1 Define Convex Schema (COMPLETE ✅)
+
+**File**: `convex/schema.ts` (104 lines)
+
+**Tables Defined**:
+1. **users** (existing) - Clerk user sync
+   - tokenIdentifier, name, email, image
+   - Index: `by_token`
+
+2. **teams** (NEW) - Rigger team management
+   - name (string) - "Team 1", "Team 2", or custom
+   - memberNames (array of strings)
+
+3. **jobRequests** (NEW) - Main work tracking
+   - Status: new, in_progress, delayed, done
+   - Dates: requestedAt, requiredBy, startedAt, completedAt, lastStatusChangeAt
+   - Details: requestedByName, area, exactLocation, description, priority
+   - Team: assignedTeamId (optional)
+   - Delay: delayReasonType (7 options), delayReasonNote
+   - Users: createdByUserId, assignedByUserId, lastUpdatedByUserId
+   - **Version field** for optimistic locking (concurrent edit protection)
+   - Indexes: by_status, by_area, by_team, by_version, by_last_status_change
+
+4. **activityEvents** (NEW) - Audit trail
+   - timestamp, type (job_created, status_changed, etc.)
+   - References: jobRequestId, teamId, userId
+   - Change tracking: fromValue, toValue, note
+   - **TTL field** for 30-day auto-archival
+   - Indexes: by_timestamp_desc, by_job, by_team, by_user, by_ttl
+
+**Key Decisions**:
+- Version field on jobRequests prevents concurrent edit conflicts
+- Activity events have TTL to prevent database bloat (30 days)
+- All indexes created for query performance
+
+### 2.2 Job Mutations (COMPLETE ✅)
+
+**File**: `convex/jobs.ts` (Lines 1-281, mutations)
+
+**Mutations Implemented**:
+
+1. **createJob** (Lines 11-76)
+   - Validates: requestedByName, area, exactLocation, description, priority, requiredBy
+   - Creates job with version=0, status="new"
+   - Sets timestamps: requestedAt, lastStatusChangeAt
+   - Tracks user: createdByUserId, lastUpdatedByUserId
+   - Creates activity event (type: "job_created", ttl: +30 days)
+   - Returns: jobId
+
+2. **updateJobStatus** (Lines 81-150)
+   - Checks version for concurrent edit protection
+   - Updates status + timestamps:
+     - Sets startedAt when → "in_progress"
+     - Sets completedAt when → "done"
+     - Updates lastStatusChangeAt
+   - Increments version
+   - Creates activity event (type: "status_changed")
+   - Returns: jobId
+
+3. **assignTeam** (Lines 155-215)
+   - Checks version
+   - Validates team exists
+   - Detects team swaps (existing → new team)
+   - Updates assignedTeamId, assignedByUserId
+   - Increments version
+   - Creates activity event:
+     - type: "team_assigned" (first assignment)
+     - type: "team_swapped" (team change)
+   - Returns: jobId
+
+4. **updateDelayReason** (Lines 220-281)
+   - Checks version
+   - Updates delayReasonType (7 options) + delayReasonNote
+   - Increments version
+   - Creates activity event (type: "delay_updated")
+   - Returns: jobId
+
+**Pattern**: All mutations follow same structure:
+1. Authenticate user
+2. Fetch current job
+3. Check version (throw if mismatch)
+4. Update job fields
+5. Increment version
+6. Create activity event with TTL
+7. Return jobId
+
+### 2.3 Job Queries (COMPLETE ✅)
+
+**File**: `convex/jobs.ts` (Lines 283-398, queries)
+
+**Queries Implemented**:
+
+1. **listJobs** (Lines 292-325)
+   - Optional filters: status, area, teamId
+   - Filters jobs by any combination
+   - Orders by lastStatusChangeAt desc (newest first)
+   - Returns array of jobs
+   - Real-time subscriptions automatic
+
+2. **getJob** (Lines 350-371)
+   - Fetches single job by ID
+   - Includes team details if assignedTeamId exists
+   - Returns null if not found
+   - Returns: { ...job, team }
+
+3. **getJobsByTeam** (Lines 377-398)
+   - Fetches all jobs for specific team
+   - Filters to active jobs (new, in_progress, delayed)
+   - Excludes completed (done)
+   - Uses by_team index
+   - Orders by lastStatusChangeAt desc
+   - Returns array of active jobs
+
+**TypeScript Issue Fixed**: Initial implementation tried to reassign query variable with `.withIndex()` which caused type errors. Fixed by collecting all jobs first, then filtering in-memory.
+
+---
+
+### Current Implementation State
+
+**What's Working** (Phase 1 + Phase 2.1-2.3):
+- ✅ Dev server runs (`npm run dev`)
+- ✅ Convex connected and syncing
+- ✅ Clerk auth flow working (sign-in/sign-up)
+- ✅ User sync from Clerk → Convex users table
+- ✅ Environment validation with Zod
+- ✅ Tailwind CSS configured with mobile breakpoints (Tailwind v4 @theme)
+- ✅ Area codes correct (24 specific facility codes)
+- ✅ Basic navigation and layout
+- ✅ **Convex schema complete** (jobRequests, teams, activityEvents, users)
+- ✅ **Job mutations complete** (createJob, updateJobStatus, assignTeam, updateDelayReason)
+- ✅ **Job queries complete** (listJobs, getJob, getJobsByTeam)
+- ✅ All backend functions deployed to Convex
+
+**What's Not Yet Implemented**:
+- ❌ Team mutations and queries (Phase 2.4)
+- ❌ Activity queries (Phase 2.5)
+- ❌ Handover query (Phase 2.6)
+- ❌ Kanban board UI (Phase 4)
+- ❌ Quick actions modal (Phase 3)
+- ❌ Real-time toast notifications (Phase 6)
+- ❌ Mobile-first responsive UI components (Phase 3-4)
+
+### Critical Information for Next Session
+
+**📍 Project Status**:
+- Phase 1 COMPLETE ✅
+- Phase 2.1-2.3 COMPLETE ✅ (Schema, Job Mutations, Job Queries)
+- Project location: `~/Developer/workspace/prompt-improver/rigger-jobs/`
+- Git branch: `rigger`
+- **Changes NOT committed** - Need to commit Phase 2 work
+
+**🎯 Next Actions**:
+1. **COMMIT WORK**: Git commit Phase 2.1-2.3 changes (schema + jobs.ts)
+2. Start Phase 2.4: Create `convex/teams.ts` with team queries & mutations
+3. Continue Phase 2.5: Activity queries
+4. Continue Phase 2.6: Handover query
+
+**⚠️ Critical Notes**:
+- ✅ Area codes FIXED (24 specific codes in lib/constants.ts)
+- ✅ Tailwind mobile breakpoints configured (Tailwind v4 @theme in globals.css)
+- ✅ All Phase 2.1-2.3 functions deployed to Convex
+- ⚠️ Changes uncommitted - need git commit before continuing
+
+**📂 Key Files Modified This Session**:
+- `convex/schema.ts` - Expanded with 3 new tables + 10 indexes
+- `convex/jobs.ts` - NEW file with 4 mutations + 3 queries (398 lines)
+- `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` - Marked Phase 2.1-2.3 complete
+
+**📂 Key Files to Create Next**:
+- `convex/teams.ts` - Team CRUD operations (Phase 2.4)
+- `convex/activity.ts` - Activity timeline queries (Phase 2.5)
+- `convex/handover.ts` - Daily handover data aggregation (Phase 2.6)
 
 ### Important Context for Next Session
-- **Project does NOT exist yet** - `~/Developer/workspace/rigger-jobs/` not created
-- **Start with Phase 1.1** - Initialize Next.js project is first task
-- **All questions resolved** - No blockers, ready to code
-- **Facility layout confirmed** - 24 areas from actual facility diagram provided by user
+- **Project Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
+- **Next Step**: Phase 2.1 - Define Convex schema with all tables
+- **All Phase 1 tasks complete** - Ready to build backend
 
 ## Key Files & Their Purpose
 
 ### Project Root
-- `~/Developer/workspace/rigger-jobs/` - NEW project directory (not yet created)
+- `~/Developer/workspace/prompt-improver/rigger-jobs/` - ✅ Created and initialized
 
-### Core Application Files (To Be Created)
+### Core Application Files
 
 **Next.js App Structure**:
-- `app/layout.tsx` - Root layout with Clerk + Convex providers
-- `app/page.tsx` - Main board view (kanban)
-- `app/jobs/new/page.tsx` - New job creation form
-- `app/activity/page.tsx` - Activity timeline
-- `app/handover/page.tsx` - Daily handover overview
-- `middleware.ts` - Clerk auth protection
+- `app/layout.tsx` - ✅ Root layout with Clerk + Convex providers
+- `app/ConvexClientProvider.tsx` - ✅ Convex + Clerk provider wrapper
+- `app/page.tsx` - ✅ Homepage (will become main board/kanban)
+- `app/dashboard/page.tsx` - ✅ Dashboard placeholder
+- `app/jobs/page.tsx` - ✅ Jobs listing placeholder
+- `app/jobs/new/page.tsx` - ❌ TO BE CREATED - New job form
+- `app/activity/page.tsx` - ❌ TO BE CREATED - Activity timeline
+- `app/handover/page.tsx` - ❌ TO BE CREATED - Daily handover
+- `middleware.ts` - ✅ Clerk auth protection
 
 **Convex Backend**:
-- `convex/schema.ts` - Database schema definition
-- `convex/jobs.ts` - Job CRUD operations
-- `convex/teams.ts` - Team management
-- `convex/activity.ts` - Activity logging & queries
-- `convex/handover.ts` - Handover data aggregation
-- `convex/users.ts` - User sync from Clerk
-- `convex/http.ts` - Webhook handlers
+- `convex/schema.ts` - ✅ Basic users table (needs expansion for jobs, teams, activity)
+- `convex/users.ts` - ✅ User store mutation (Clerk sync)
+- `convex/auth.config.ts` - ✅ Clerk auth configuration
+- `convex/jobs.ts` - ❌ TO BE CREATED - Job CRUD operations
+- `convex/teams.ts` - ❌ TO BE CREATED - Team management
+- `convex/activity.ts` - ❌ TO BE CREATED - Activity logging & queries
+- `convex/handover.ts` - ❌ TO BE CREATED - Handover data aggregation
+- `convex/http.ts` - ❌ TO BE CREATED - Webhook handlers (if needed)
 
-**React Components**:
-- `components/JobCard.tsx` - Individual job card
-- `components/StatusColumn.tsx` - Column container for jobs
-- `components/TeamBadge.tsx` - Team status indicator
-- `components/QuickActionsModal.tsx` - Bottom sheet for job actions
-- `components/TodayTeamsPanel.tsx` - Team overview panel
-- `components/ActivityEventCard.tsx` - Activity event display
+**React Components** (All to be created):
+- `components/JobCard.tsx` - ❌ Individual job card
+- `components/StatusColumn.tsx` - ❌ Column container for jobs
+- `components/TeamBadge.tsx` - ❌ Team status indicator
+- `components/QuickActionsModal.tsx` - ❌ Bottom sheet for job actions
+- `components/TodayTeamsPanel.tsx` - ❌ Team overview panel
+- `components/ActivityEventCard.tsx` - ❌ Activity event display
+- `app/components/Navbar.tsx` - ✅ Navigation bar
+- `app/components/UserMenu.tsx` - ✅ User menu
+- `components/ui/button.tsx` - ✅ shadcn button
 
 **Configuration**:
-- `.env.local` - Environment variables
-- `lib/env.ts` - Environment variable validation with Zod
-- `tailwind.config.ts` - Tailwind configuration with mobile breakpoints
-- `lib/constants.ts` - 24 facility area codes, delay reasons, shift times
+- `.env.local` - ✅ Environment variables configured
+- `lib/env.ts` - ✅ Zod validation
+- `lib/constants.ts` - ✅ Area codes, delay reasons, shift times (needs area code verification)
+- `lib/utils.ts` - ✅ Utility functions (cn helper)
+- `tailwind.config.ts` - ❌ Needs mobile breakpoints configuration
+- `package.json` - ✅ All dependencies installed
 
 ---
 
@@ -244,20 +469,39 @@ const createJob = useMutation(api.jobs.createJob);
 
 ## Important Notes & Gotchas
 
+### Phase 1 Implementation Learnings
+
+**✅ What Worked Well**:
+- Convex auth integration with Clerk was straightforward
+- `convex/users.ts` store mutation pattern handles user sync automatically
+- Environment validation with Zod caught missing env vars early
+- Middleware pattern protects routes cleanly
+
+**⚠️ Issues Encountered & Solutions**:
+1. **Area Codes Mismatch**: Initial constants had 77 generic codes instead of 24 specific
+   - Solution: Need to manually update `lib/constants.ts` with exact facility codes
+2. **Tailwind Config**: Mobile breakpoints not configured yet
+   - Solution: Add to `tailwind.config.ts` in Phase 2
+3. **Convex Auth Setup**: Required specific JWT template name in Clerk dashboard
+   - Solution: Create "convex" template, configure issuer URL correctly
+
 ### 1. Convex Schema Changes
 **Issue**: Schema changes require migration
 **Solution**: Use `npx convex run` scripts for data migrations
 **Best Practice**: Test schema changes in dev environment first
+**Phase 1 Status**: ✅ Basic users schema working, ready to expand
 
 ### 2. Clerk JWT Template
 **Critical**: Must create "convex" JWT template in Clerk
 **Gotcha**: Forgetting this breaks Convex auth
 **Check**: Verify `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` matches JWT issuer
+**Phase 1 Status**: ✅ Configured and tested
 
 ### 3. Mobile Touch Targets
 **Rule**: Minimum 44px × 44px for all tappable elements
 **Why**: Apple/Google accessibility guidelines
 **Check**: Test on real devices, not just browser resize
+**Phase 1 Status**: Not yet applicable (no UI components created)
 
 ### 4. Real-Time Update Performance
 **Concern**: With 50+ jobs across 24 areas, does board re-render lag?
@@ -267,22 +511,26 @@ const createJob = useMutation(api.jobs.createJob);
 - Index Convex queries by status, area, team
 - Limit initial query to jobs from last 7 days
 - Test with 6 simultaneous users before launch
+**Phase 1 Status**: Infrastructure ready, will test in Phase 4+
 
 ### 5. Concurrent Edit Conflicts
 **Issue**: Two users assign different teams to same job
 **Solution**: Optimistic locking with version field
 **UX**: Show warning toast "Job updated by {user}, please refresh"
 **Critical**: Test this scenario thoroughly in Phase 7.4
+**Phase 1 Status**: Pattern documented, will implement in Phase 2
 
-### 5. Offline Handling
+### 6. Offline Handling
 **Issue**: Convex requires connection for real-time
 **Solution**: Show offline indicator, queue mutations when reconnected
 **Future**: Add service worker for true offline support
+**Phase 1 Status**: Connection working, offline handling for Phase 6+
 
-### 6. Webhook Security
+### 7. Webhook Security
 **Critical**: Verify Clerk webhook signature in Convex
 **Pattern**: Use `svix` library (already in Convex)
 **Gotcha**: Test webhook in prod (ngrok in dev)
+**Phase 1 Status**: Not yet implemented (optional for Phase 1)
 
 ---
 
@@ -387,29 +635,32 @@ NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://...clerk.accounts.dev
 
 ## 📝 Session Handoff Notes (Context Reset Prep)
 
-### Files Modified This Session
-1. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-plan.md` (571 lines)
-   - Complete 7-phase implementation plan
-   - 28 major tasks with acceptance criteria
-   - Technology decisions & rationale
-   - Risk assessment & mitigation
+### Files Modified This Session (2025-11-23)
 
-2. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-context.md` (385 lines)
-   - This file - architectural decisions
-   - Data model explanations
-   - Integration points (Clerk ↔ Convex)
-   - Important gotchas & testing strategy
+**Documentation Updates**:
+1. **Updated**: `dev/active/rigger-jobs-app/rigger-jobs-app-context.md` (this file)
+   - Updated status to "Phase 1 Complete"
+   - Added current implementation state
+   - Listed all created files with ✅/❌ status
+   - Added critical notes about next steps
 
-3. **Created**: `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` (354 lines)
-   - Checklist format for all tasks
-   - Organized by phase
-   - All tasks currently unchecked (ready to start)
+2. **Updated**: `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md`
+   - ✅ Marked all Phase 1 tasks as complete
+
+**Application Files Created** (in `~/Developer/workspace/prompt-improver/rigger-jobs/`):
+- All Phase 1 files listed above in "Core Application Files" section
+- Project fully initialized and working
+- Dev server runs successfully
+- Auth flow tested and working
 
 ### Git Status
 - **Branch**: `rigger`
-- **Last Commit**: `c0f779b` - "Add comprehensive strategic plan for rigger job management app"
-- **Committed**: All 3 plan documents (1,283 lines total)
-- **Uncommitted**: None (clean working directory for plan files)
+- **Working Directory**: `/Users/ramunasnognys/Developer/workspace/prompt-improver/`
+- **Project Location**: `rigger-jobs/` subdirectory
+- **Uncommitted Changes**:
+  - Phase 1 task checkmarks in `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md`
+  - Context updates in this file
+  - Entire `rigger-jobs/` project directory (new files not yet committed)
 
 ### Critical Decisions Made This Session
 
@@ -445,36 +696,32 @@ NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://...clerk.accounts.dev
 5. ✅ Added activity event archival strategy
 6. ✅ Enhanced testing requirements (6 users, <1s updates)
 
-### Next Immediate Steps (Phase 1.1)
+### Next Immediate Steps (Phase 2.1 - Define Convex Schema)
 
-**Command to run first**:
+**Start Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
+
+**First Task**: Update `convex/schema.ts` to add:
+1. `jobRequests` table with all fields (status, dates, area, team, version, etc.)
+2. `teams` table (name, memberNames)
+3. `activityEvents` table (timestamp, type, jobId, teamId, userId, ttl)
+4. Add all necessary indexes
+
+**Critical Points**:
+- Add `version` field to jobRequests for optimistic locking
+- Verify area codes in `lib/constants.ts` match facility layout (24 areas)
+- Add TTL field to activityEvents for 30-day auto-archival
+- Reference existing `users` table (already implemented)
+
+**Commands to test**:
 ```bash
-cd ~/Developer/workspace
-npx create-next-app@latest rigger-jobs
+cd ~/Developer/workspace/prompt-improver/rigger-jobs
+npx convex dev  # Apply schema changes
+# Verify schema in Convex dashboard
 ```
-
-**Selections for prompts**:
-- TypeScript: Yes
-- ESLint: Yes
-- Tailwind CSS: Yes
-- `src/` directory: No
-- App Router: Yes
-- Import alias: @/* (default)
-
-**Then install dependencies**:
-```bash
-cd rigger-jobs
-npm install convex @clerk/nextjs react-hook-form zod sonner date-fns lucide-react
-```
-
-**Then create initial files**:
-1. `lib/env.ts` - Zod env validation
-2. `lib/constants.ts` - 24 area codes, delay reasons, shift times
-3. Update `tailwind.config.ts` - mobile breakpoints
 
 ### Blockers: NONE
 
-All critical questions resolved. Ready to start implementation immediately.
+Phase 1 complete and working. Ready for Phase 2 (backend development).
 
 ### Testing Approach for Phase 1
 
@@ -519,4 +766,45 @@ Planning phase complete. No partially completed features. Clean slate for implem
 
 ---
 
-**🎯 HANDOFF SUMMARY**: Strategic planning complete. All questions resolved. 3 comprehensive plan documents created and committed to git. Ready to start Phase 1.1 (Initialize Next.js Project) immediately. No blockers.
+**🎯 HANDOFF SUMMARY FOR NEXT SESSION**:
+- ✅ Phase 1 COMPLETE - Project initialized and working
+- 📂 Location: `~/Developer/workspace/prompt-improver/rigger-jobs/`
+- 🚀 Next: Phase 2.1 - Define Convex schema
+- ⚠️ Fix area codes in `lib/constants.ts` FIRST (77 codes → 24 specific codes)
+- ⚠️ Add mobile breakpoints to Tailwind config
+- 📋 Reference: See tasks.md for Phase 2 checklist
+
+---
+
+## Quick Reference Commands
+
+**Development**:
+```bash
+cd ~/Developer/workspace/prompt-improver/rigger-jobs
+npm run dev          # Start Next.js dev server (port 3000)
+npx convex dev       # Start Convex sync (real-time backend)
+npm run build        # Production build
+npm run lint         # Run ESLint
+```
+
+**Testing**:
+- Open browser: http://localhost:3000
+- Test auth: Sign in/sign up flow
+- Check Convex dashboard: https://dashboard.convex.dev
+
+**Environment Variables** (already configured in `.env.local`):
+- `NEXT_PUBLIC_CONVEX_URL` - Convex backend URL
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk auth public key
+- `CLERK_SECRET_KEY` - Clerk secret (server-side)
+- `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` - Clerk issuer URL
+
+---
+
+## Phase 2 Quick Start Checklist
+
+Before writing code for Phase 2:
+1. ✅ Read `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` Phase 2 section
+2. ⚠️ Fix area codes in `lib/constants.ts` (24 specific codes)
+3. ⚠️ Add mobile breakpoints to `tailwind.config.ts`
+4. 📖 Review data model in this context doc (lines 230-280)
+5. 🚀 Start with Phase 2.1: Update `convex/schema.ts`
