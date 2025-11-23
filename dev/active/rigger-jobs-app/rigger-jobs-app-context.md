@@ -1,22 +1,29 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-23 18:05 UTC (Phase 2.1-2.3 Complete)
+**Last Updated**: 2025-11-23 14:17 UTC (Phase 2 Backend COMPLETE ✅)
 
-## 🎯 Current Status: PHASE 2.1-2.3 COMPLETE ✅
+## 🎯 Current Status: PHASE 2 BACKEND COMPLETE ✅
 
-**Phase**: Phase 2 (Convex Backend) - IN PROGRESS
-**Completed**: 2.1 Define Schema, 2.2 Job Mutations, 2.3 Job Queries
-**Next Phase**: 2.4 Team Queries & Mutations
+**Phase**: Phase 2 (Convex Backend) - **COMPLETE** ✅
+**Completed**: 2.1 Schema, 2.2 Job Mutations, 2.3 Job Queries, 2.4 Teams, 2.5 Activity, 2.6 Handover
+**Next Phase**: Phase 3 - Core UI Components
 **Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
-**Git Branch**: rigger
-**Latest Git Commit**: TBD (changes not yet committed)
+**Git Branch**: rigger (main for convex files)
+**Latest Commits**:
+- `6788149` - feat: Phase 2.6 Handover Query
+- `98898e2` - feat: Phase 2.5 Activity Queries
+- `5a0e76f` - feat: Phase 2.4 Team Queries & Mutations
 
-### Session Summary (2025-11-23 - PHASE 2 IMPLEMENTATION)
+### Session Summary (2025-11-23 - PHASE 2 COMPLETE)
 **What Was Accomplished This Session**:
 - ✅ Phase 2.1: Convex schema expanded with jobRequests, teams, activityEvents tables
 - ✅ Phase 2.2: Job mutations implemented (createJob, updateJobStatus, assignTeam, updateDelayReason)
 - ✅ Phase 2.3: Job queries implemented (listJobs, getJob, getJobsByTeam)
+- ✅ Phase 2.4: Team queries & mutations (listTeams, getTeamStatus, createTeam)
+- ✅ Phase 2.5: Activity queries + cron job (getTodayActivity, getActivityByDate, getActivityByJob, getActivityByTeam, archiveOldEvents)
+- ✅ Phase 2.6: Handover query (getHandoverData - groups by module/area)
 - ✅ All backend functions deployed and tested in Convex dashboard
+- ✅ **ENTIRE PHASE 2 BACKEND COMPLETE** - Ready for UI development
 
 **Previous Session (Phase 1)**:
 - ✅ Phase 1.1: Next.js project initialized with TypeScript, Tailwind, App Router
@@ -35,9 +42,12 @@
 
 ### Files Modified/Created This Session (Phase 2)
 
-**Convex Backend** (NEW):
+**Convex Backend** (ALL COMPLETE ✅):
 - `convex/schema.ts` - ✅ EXPANDED with jobRequests, teams, activityEvents tables + 10 indexes
-- `convex/jobs.ts` - ✅ CREATED with 4 mutations + 3 queries (398 lines)
+- `convex/jobs.ts` - ✅ CREATED with 4 mutations + 3 queries (379 lines)
+- `convex/teams.ts` - ✅ CREATED with 2 queries + 1 mutation (78 lines)
+- `convex/activity.ts` - ✅ CREATED with 4 queries + 1 internal mutation + cron job (154 lines)
+- `convex/handover.ts` - ✅ CREATED with getHandoverData query (143 lines)
 
 **Configuration Files** (Phase 1):
 - `package.json` - All dependencies installed (Next.js, Convex, Clerk, etc.)
@@ -46,10 +56,15 @@
 - `lib/constants.ts` - ✅ Area codes CORRECT (24 specific codes), delay reasons, shift times, status enums
 - `lib/utils.ts` - Utility functions (cn helper)
 
-**Convex Backend** (Phase 1):
+**Convex Backend** (Phase 1 + 2 - ALL COMPLETE):
 - `convex/users.ts` - User store mutation for Clerk sync
 - `convex/auth.config.ts` - Clerk auth configuration
 - `convex/myFunctions.ts` - Sample query (testing)
+- `convex/schema.ts` - Complete schema with 4 tables
+- `convex/jobs.ts` - Job CRUD operations
+- `convex/teams.ts` - Team operations
+- `convex/activity.ts` - Activity queries + cron
+- `convex/handover.ts` - Handover data aggregation
 
 **React Components**:
 - `app/layout.tsx` - Root layout with ConvexClientProvider + Navbar
@@ -181,11 +196,137 @@
 
 **TypeScript Issue Fixed**: Initial implementation tried to reassign query variable with `.withIndex()` which caused type errors. Fixed by collecting all jobs first, then filtering in-memory.
 
+### 2.4 Team Queries & Mutations (COMPLETE ✅)
+
+**File**: `convex/teams.ts` (78 lines)
+
+**Queries Implemented**:
+
+1. **listTeams** (Lines 10-18)
+   - Fetches all teams
+   - Sorts alphabetically by name
+   - No filters (small dataset)
+   - Returns array of teams
+
+2. **getTeamStatus** (Lines 25-56)
+   - Determines if team is FREE or BUSY
+   - Queries jobs assigned to team via by_team index
+   - Filters active jobs (new, in_progress, delayed)
+   - Returns discriminated union:
+     - `{ status: 'FREE' }` if no active jobs
+     - `{ status: 'BUSY', area, jobId }` if has active jobs
+
+**Mutations Implemented**:
+
+3. **createTeam** (Lines 63-78)
+   - Validates: name, memberNames array
+   - Requires authentication
+   - Supports "Team 1-20" or custom names
+   - Returns: teamId
+
+**Implementation Pattern**: Teams are simple entities (name + members), status computed on-the-fly from job assignments.
+
+### 2.5 Activity Queries (COMPLETE ✅)
+
+**File**: `convex/activity.ts` (154 lines)
+
+**Queries Implemented**:
+
+1. **getTodayActivity** (Lines 10-40)
+   - Shift-aware: determines current shift based on time
+   - Day shift (07:00-19:00): if currentHour < 19
+   - Night shift (19:00-07:00): if currentHour >= 19
+   - Queries events since shift start
+   - Sorted by timestamp desc (newest first)
+
+2. **getActivityByDate** (Lines 47-73)
+   - Accepts date param (Unix timestamp)
+   - Calculates start/end of day (00:00-23:59)
+   - Queries events within date range
+   - Sorted by timestamp desc
+
+3. **getActivityByJob** (Lines 78-93)
+   - Queries by jobRequestId using by_job index
+   - Returns all events for specific job
+   - Sorted by timestamp desc
+
+4. **getActivityByTeam** (Lines 98-113)
+   - Queries by teamId using by_team index
+   - Returns all events for specific team
+   - Sorted by timestamp desc
+
+**Internal Mutation**:
+
+5. **archiveOldEvents** (Lines 118-141)
+   - Internal mutation (not exposed to client)
+   - Queries events where ttl < now using by_ttl index
+   - Deletes expired events
+   - Returns count of deleted events
+
+**Cron Job** (Lines 147-153):
+- Schedule: Daily at 02:00 UTC
+- Calls internal.activity.archiveOldEvents
+- Auto-archives events older than 30 days
+
+**Key Decision**: TTL field set by mutations in jobs.ts (30 days), cron job handles cleanup.
+
+### 2.6 Handover Query (COMPLETE ✅)
+
+**File**: `convex/handover.ts` (143 lines)
+
+**Query Implemented**:
+
+1. **getHandoverData** (Lines 10-126)
+   - Optional date filter (defaults to today)
+   - Fetches all jobs (or filtered by date range)
+   - Fetches all teams for lookup
+   - Groups jobs by:
+     1. Module (DU/DP/DW) - extracted from area code prefix
+     2. Area code (DU010, DP030, etc.)
+     3. Status category (completed/inProgress/delayed/new)
+   - Per area:
+     - completed: status = 'done'
+     - inProgress: status = 'in_progress'
+     - delayed: status = 'delayed' (includes delay reasons)
+     - new: status = 'new'
+   - Includes counts per category
+   - Includes team details via lookup
+   - Sorts areas numerically within each module
+
+**Return Structure**:
+```ts
+{
+  modules: {
+    DU: { areas: {
+      DU010: {
+        completed: JobWithTeam[],
+        inProgress: JobWithTeam[],
+        delayed: JobWithTeam[],
+        new: JobWithTeam[],
+        counts: { completed, inProgress, delayed, new, total }
+      }
+    }},
+    DP: { areas: { ... }},
+    DW: { areas: { ... }}
+  }
+}
+```
+
+**Performance**: Optimized for 50+ jobs across 24 areas:
+- Single query for all jobs
+- Single query for all teams
+- In-memory grouping and sorting
+- Map-based team lookup (O(1))
+
+**Date Filter Logic**:
+- If date provided: filters jobs active during that date
+- Job is "active" if: requestedAt <= endOfDay AND (not completed OR completedAt >= startOfDay)
+
 ---
 
 ### Current Implementation State
 
-**What's Working** (Phase 1 + Phase 2.1-2.3):
+**What's Working** (Phase 1 + Phase 2 COMPLETE):
 - ✅ Dev server runs (`npm run dev`)
 - ✅ Convex connected and syncing
 - ✅ Clerk auth flow working (sign-in/sign-up)
@@ -197,14 +338,20 @@
 - ✅ **Convex schema complete** (jobRequests, teams, activityEvents, users)
 - ✅ **Job mutations complete** (createJob, updateJobStatus, assignTeam, updateDelayReason)
 - ✅ **Job queries complete** (listJobs, getJob, getJobsByTeam)
-- ✅ All backend functions deployed to Convex
+- ✅ **Team queries & mutations complete** (listTeams, getTeamStatus, createTeam)
+- ✅ **Activity queries complete** (getTodayActivity, getActivityByDate, getActivityByJob, getActivityByTeam)
+- ✅ **Activity archival complete** (archiveOldEvents internal mutation + daily cron job)
+- ✅ **Handover query complete** (getHandoverData with module/area grouping)
+- ✅ **ALL BACKEND FUNCTIONS DEPLOYED TO CONVEX** ✅
 
-**What's Not Yet Implemented**:
-- ❌ Team mutations and queries (Phase 2.4)
-- ❌ Activity queries (Phase 2.5)
-- ❌ Handover query (Phase 2.6)
+**What's Not Yet Implemented** (Phase 3+):
+- ❌ JobCard component (Phase 3.1)
+- ❌ StatusColumn component (Phase 3.2)
+- ❌ TeamBadge component (Phase 3.3)
+- ❌ QuickActionsModal component (Phase 3.4)
+- ❌ TodayTeamsPanel component (Phase 3.5)
+- ❌ ActivityEventCard component (Phase 3.6)
 - ❌ Kanban board UI (Phase 4)
-- ❌ Quick actions modal (Phase 3)
 - ❌ Real-time toast notifications (Phase 6)
 - ❌ Mobile-first responsive UI components (Phase 3-4)
 
@@ -212,37 +359,45 @@
 
 **📍 Project Status**:
 - Phase 1 COMPLETE ✅
-- Phase 2.1-2.3 COMPLETE ✅ (Schema, Job Mutations, Job Queries)
+- **Phase 2 COMPLETE ✅** (All backend functions implemented and deployed)
 - Project location: `~/Developer/workspace/prompt-improver/rigger-jobs/`
-- Git branch: `rigger`
-- **Changes NOT committed** - Need to commit Phase 2 work
+- Git branches:
+  - `rigger` for documentation updates
+  - `main` for convex files (committed)
+- **All changes committed** ✅
 
 **🎯 Next Actions**:
-1. **COMMIT WORK**: Git commit Phase 2.1-2.3 changes (schema + jobs.ts)
-2. Start Phase 2.4: Create `convex/teams.ts` with team queries & mutations
-3. Continue Phase 2.5: Activity queries
-4. Continue Phase 2.6: Handover query
+1. **START PHASE 3**: Core UI Components
+2. Create `components/JobCard.tsx` (Phase 3.1)
+3. Create `components/StatusColumn.tsx` (Phase 3.2)
+4. Create other Phase 3 components
 
 **⚠️ Critical Notes**:
 - ✅ Area codes FIXED (24 specific codes in lib/constants.ts)
 - ✅ Tailwind mobile breakpoints configured (Tailwind v4 @theme in globals.css)
-- ✅ All Phase 2.1-2.3 functions deployed to Convex
-- ⚠️ Changes uncommitted - need git commit before continuing
+- ✅ **ALL PHASE 2 BACKEND COMPLETE** - 4 Convex files deployed
+- ✅ All changes committed to git
+- ✅ Cron job configured for daily activity archival (02:00 UTC)
 
-**📂 Key Files Modified This Session**:
-- `convex/schema.ts` - Expanded with 3 new tables + 10 indexes
-- `convex/jobs.ts` - NEW file with 4 mutations + 3 queries (398 lines)
-- `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` - Marked Phase 2.1-2.3 complete
+**📂 Backend Files Created (Phase 2 - ALL COMPLETE)**:
+- `convex/schema.ts` - 4 tables + 10 indexes (105 lines)
+- `convex/jobs.ts` - 4 mutations + 3 queries (379 lines)
+- `convex/teams.ts` - 2 queries + 1 mutation (78 lines)
+- `convex/activity.ts` - 4 queries + 1 internal mutation + cron (154 lines)
+- `convex/handover.ts` - 1 query (143 lines)
 
-**📂 Key Files to Create Next**:
-- `convex/teams.ts` - Team CRUD operations (Phase 2.4)
-- `convex/activity.ts` - Activity timeline queries (Phase 2.5)
-- `convex/handover.ts` - Daily handover data aggregation (Phase 2.6)
+**📂 Frontend Files to Create Next (Phase 3)**:
+- `components/JobCard.tsx` - Individual job card
+- `components/StatusColumn.tsx` - Column for status groups
+- `components/TeamBadge.tsx` - Team status indicator
+- `components/QuickActionsModal.tsx` - Bottom sheet for actions
+- `components/TodayTeamsPanel.tsx` - Team overview panel
+- `components/ActivityEventCard.tsx` - Activity event display
 
 ### Important Context for Next Session
 - **Project Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
-- **Next Step**: Phase 2.1 - Define Convex schema with all tables
-- **All Phase 1 tasks complete** - Ready to build backend
+- **Next Step**: Phase 3.1 - Create JobCard component
+- **All Phase 1 + Phase 2 tasks complete** - Backend fully functional, ready for UI
 
 ## Key Files & Their Purpose
 
@@ -262,15 +417,15 @@
 - `app/handover/page.tsx` - ❌ TO BE CREATED - Daily handover
 - `middleware.ts` - ✅ Clerk auth protection
 
-**Convex Backend**:
-- `convex/schema.ts` - ✅ Basic users table (needs expansion for jobs, teams, activity)
+**Convex Backend** (ALL COMPLETE ✅):
+- `convex/schema.ts` - ✅ Complete schema (4 tables + 10 indexes)
 - `convex/users.ts` - ✅ User store mutation (Clerk sync)
 - `convex/auth.config.ts` - ✅ Clerk auth configuration
-- `convex/jobs.ts` - ❌ TO BE CREATED - Job CRUD operations
-- `convex/teams.ts` - ❌ TO BE CREATED - Team management
-- `convex/activity.ts` - ❌ TO BE CREATED - Activity logging & queries
-- `convex/handover.ts` - ❌ TO BE CREATED - Handover data aggregation
-- `convex/http.ts` - ❌ TO BE CREATED - Webhook handlers (if needed)
+- `convex/jobs.ts` - ✅ Job CRUD (4 mutations + 3 queries)
+- `convex/teams.ts` - ✅ Team management (2 queries + 1 mutation)
+- `convex/activity.ts` - ✅ Activity queries + archival cron job
+- `convex/handover.ts` - ✅ Handover data aggregation query
+- `convex/http.ts` - ⚠️ Optional (Clerk webhook - can use Convex sync instead)
 
 **React Components** (All to be created):
 - `components/JobCard.tsx` - ❌ Individual job card
@@ -696,32 +851,33 @@ NEXT_PUBLIC_CLERK_FRONTEND_API_URL=https://...clerk.accounts.dev
 5. ✅ Added activity event archival strategy
 6. ✅ Enhanced testing requirements (6 users, <1s updates)
 
-### Next Immediate Steps (Phase 2.1 - Define Convex Schema)
+### Next Immediate Steps (Phase 3.1 - JobCard Component)
 
 **Start Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
 
-**First Task**: Update `convex/schema.ts` to add:
-1. `jobRequests` table with all fields (status, dates, area, team, version, etc.)
-2. `teams` table (name, memberNames)
-3. `activityEvents` table (timestamp, type, jobId, teamId, userId, ttl)
-4. Add all necessary indexes
+**First Task**: Create `components/JobCard.tsx`:
+1. Display job details (description, area, requestedByName, team)
+2. Add priority indicator (urgent = red border/icon)
+3. Add status-based border color
+4. Min 44px tap target
+5. Click handler to open QuickActionsModal
 
 **Critical Points**:
-- Add `version` field to jobRequests for optimistic locking
-- Verify area codes in `lib/constants.ts` match facility layout (24 areas)
-- Add TTL field to activityEvents for 30-day auto-archival
-- Reference existing `users` table (already implemented)
+- Import from `@/convex/_generated/dataModel` for types
+- Use Tailwind for styling (mobile-first)
+- Add Lucide React icons for priority/status
+- Follow Phase 3.1 checklist in tasks.md
 
-**Commands to test**:
+**Commands to run**:
 ```bash
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-npx convex dev  # Apply schema changes
-# Verify schema in Convex dashboard
+npm run dev  # Start dev server
+# Open http://localhost:3000
 ```
 
 ### Blockers: NONE
 
-Phase 1 complete and working. Ready for Phase 2 (backend development).
+Phase 1 + 2 complete. All backend functions deployed and working. Ready for UI development.
 
 ### Testing Approach for Phase 1
 
@@ -768,11 +924,13 @@ Planning phase complete. No partially completed features. Clean slate for implem
 
 **🎯 HANDOFF SUMMARY FOR NEXT SESSION**:
 - ✅ Phase 1 COMPLETE - Project initialized and working
+- ✅ Phase 2 COMPLETE - All backend functions deployed
 - 📂 Location: `~/Developer/workspace/prompt-improver/rigger-jobs/`
-- 🚀 Next: Phase 2.1 - Define Convex schema
-- ⚠️ Fix area codes in `lib/constants.ts` FIRST (77 codes → 24 specific codes)
-- ⚠️ Add mobile breakpoints to Tailwind config
-- 📋 Reference: See tasks.md for Phase 2 checklist
+- 🚀 Next: Phase 3.1 - Create JobCard component
+- ✅ Area codes correct (24 specific codes)
+- ✅ Mobile breakpoints configured
+- ✅ All Convex functions deployed (jobs, teams, activity, handover)
+- 📋 Reference: See tasks.md for Phase 3 checklist
 
 ---
 
@@ -800,11 +958,13 @@ npm run lint         # Run ESLint
 
 ---
 
-## Phase 2 Quick Start Checklist
+## Phase 3 Quick Start Checklist
 
-Before writing code for Phase 2:
-1. ✅ Read `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` Phase 2 section
-2. ⚠️ Fix area codes in `lib/constants.ts` (24 specific codes)
-3. ⚠️ Add mobile breakpoints to `tailwind.config.ts`
-4. 📖 Review data model in this context doc (lines 230-280)
-5. 🚀 Start with Phase 2.1: Update `convex/schema.ts`
+Before writing code for Phase 3:
+1. ✅ Phase 2 backend complete - all queries/mutations working
+2. 📖 Read `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` Phase 3 section
+3. 📖 Review Convex API exports in `convex/_generated/api.d.ts`
+4. 📖 Review data types in `convex/_generated/dataModel.ts`
+5. 🚀 Start with Phase 3.1: Create `components/JobCard.tsx`
+6. 💡 Use `useQuery(api.jobs.listJobs, {...})` for data fetching
+7. 💡 Use `useMutation(api.jobs.createJob)` for mutations

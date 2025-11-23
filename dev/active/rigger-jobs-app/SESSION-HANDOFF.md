@@ -1,70 +1,73 @@
 # Session Handoff - Rigger Jobs App
 
-**Date**: 2025-11-23 18:10 UTC
-**Session**: Phase 2.1-2.3 Implementation Complete
-**Git Branch**: `rigger`
-**Context Usage**: 94k/200k (47%) - Documentation updated
+**Date**: 2025-11-23 14:20 UTC
+**Session**: Phase 2 Backend COMPLETE ✅
+**Git Branches**: `main` (convex), `rigger` (docs)
+**Context Usage**: 86k/200k (43%)
 
 ---
 
-## ✅ PHASE 2.1-2.3 COMPLETE
+## ✅ PHASE 2 BACKEND COMPLETE
 
 ### What Was Accomplished This Session
 
 **Phase 2.1: Define Convex Schema** ✅
-- ✅ Expanded `convex/schema.ts` with 3 new tables
-- ✅ jobRequests table (status, dates, area, team, delay, version)
-- ✅ teams table (name, memberNames array)
-- ✅ activityEvents table (timestamp, type, references, TTL)
-- ✅ Added 10 indexes for query performance
-- ✅ Deployed schema to Convex (all indexes created)
+- Expanded `convex/schema.ts` with 3 new tables + 10 indexes
+- Deployed schema to Convex
 
 **Phase 2.2: Job Mutations** ✅
-- ✅ Created `convex/jobs.ts` with 4 mutations:
-  1. createJob - Insert job with version=0, create activity event
-  2. updateJobStatus - Version checking, update timestamps, log activity
-  3. assignTeam - Detect swaps, version checking, log activity
-  4. updateDelayReason - Update reason/note, version checking, log activity
-- ✅ All mutations include version checking (concurrent edit protection)
-- ✅ All mutations create activity events with 30-day TTL
-- ✅ Deployed successfully to Convex
+- Created `convex/jobs.ts` with 4 mutations (createJob, updateJobStatus, assignTeam, updateDelayReason)
+- Version checking for concurrent edit protection
+- Activity event logging with 30-day TTL
+- Commits: Previous session
 
 **Phase 2.3: Job Queries** ✅
-- ✅ Added 3 queries to `convex/jobs.ts`:
-  1. listJobs - Filter by status/area/team, sort by lastStatusChangeAt
-  2. getJob - Single job by ID with team details
-  3. getJobsByTeam - Active jobs for specific team
-- ✅ Fixed TypeScript issues (query variable reassignment)
-- ✅ Deployed successfully to Convex
-- ✅ Real-time subscriptions automatic
+- Added 3 queries to `convex/jobs.ts` (listJobs, getJob, getJobsByTeam)
+- Real-time subscriptions working
+- Commits: Previous session
+
+**Phase 2.4: Team Queries & Mutations** ✅
+- Created `convex/teams.ts` with 2 queries + 1 mutation
+- listTeams, getTeamStatus (FREE/BUSY logic), createTeam
+- Commits: `5a0e76f`, `ce7aaa1`
+
+**Phase 2.5: Activity Queries** ✅
+- Created `convex/activity.ts` with 4 queries + internal mutation + cron
+- Shift-aware getTodayActivity (day: 07:00-19:00, night: 19:00-07:00)
+- getActivityByDate, getActivityByJob, getActivityByTeam
+- archiveOldEvents internal mutation
+- Daily cron job at 02:00 UTC
+- Commits: `98898e2`, `b11b478`
+
+**Phase 2.6: Handover Query** ✅
+- Created `convex/handover.ts` with getHandoverData query
+- Groups by module (DU/DP/DW) and area code
+- Categorizes: completed, inProgress, delayed, new
+- Includes counts and team details
+- Commits: `6788149`, `2068981`
 
 ---
 
-## 📂 FILES MODIFIED THIS SESSION
+## 📂 FILES CREATED/MODIFIED THIS SESSION
 
-### New Files Created
-1. **convex/jobs.ts** (398 lines)
-   - 4 mutations (lines 1-281)
-   - 3 queries (lines 283-398)
-   - All deployed and tested
+### New Convex Files (All Deployed ✅)
+1. **convex/schema.ts** (105 lines) - Expanded from Phase 1
+2. **convex/jobs.ts** (379 lines) - 4 mutations + 3 queries
+3. **convex/teams.ts** (78 lines) - 2 queries + 1 mutation
+4. **convex/activity.ts** (154 lines) - 4 queries + internal mutation + cron
+5. **convex/handover.ts** (143 lines) - 1 query
 
-### Files Modified
-1. **convex/schema.ts** (104 lines)
-   - Added jobRequests table with 17 fields
-   - Added teams table with 2 fields
-   - Added activityEvents table with 8 fields
-   - Added 10 indexes across tables
+### Documentation Updated
+1. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md**
+   - Marked Phase 2.1-2.6 complete (all checkboxes)
 
-2. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md**
-   - Marked Phase 2.1 complete (all checkboxes)
-   - Marked Phase 2.2 complete (all checkboxes)
-   - Marked Phase 2.3 complete (all checkboxes)
+2. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md**
+   - Updated to "Phase 2 COMPLETE"
+   - Added detailed implementation notes for 2.4, 2.5, 2.6
+   - Updated "Next Actions" for Phase 3
 
-3. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md**
-   - Updated status to "Phase 2.1-2.3 Complete"
-   - Added detailed Phase 2 implementation section
-   - Updated "What's Working" section
-   - Updated "Next Actions" for Phase 2.4+
+3. **dev/active/rigger-jobs-app/SESSION-HANDOFF.md** (this file)
+   - Updated with complete Phase 2 status
 
 ---
 
@@ -94,74 +97,67 @@
 
 ## ⚠️ CRITICAL NOTES
 
-### Uncommitted Changes
-**STATUS**: All Phase 2.1-2.3 work is UNCOMMITTED
-**FILES**:
-- `convex/schema.ts` (modified)
-- `convex/jobs.ts` (new file)
-- `dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md` (updated)
-- `dev/active/rigger-jobs-app/rigger-jobs-app-context.md` (updated)
+### Git Status
+**Convex Files**: ✅ ALL COMMITTED to `main` branch
+- `5a0e76f` - Phase 2.4 Team Queries & Mutations
+- `98898e2` - Phase 2.5 Activity Queries
+- `6788149` - Phase 2.6 Handover Query
 
-**ACTION REQUIRED**: Git commit before continuing to Phase 2.4
+**Documentation**: ✅ ALL COMMITTED to `rigger` branch
+- `ce7aaa1` - Mark Phase 2.4 complete
+- `b11b478` - Mark Phase 2.5 complete
+- `2068981` - Mark Phase 2.6 complete
+
+**ACTION REQUIRED**: None - all changes committed
 
 ### Convex Deployment Status
-- ✅ Schema deployed successfully (10 indexes created)
-- ✅ All mutations deployed and available
-- ✅ All queries deployed and available
+- ✅ Schema deployed (4 tables + 10 indexes)
+- ✅ 11 queries deployed and available
+- ✅ 5 mutations deployed and available
+- ✅ 1 cron job scheduled (daily 02:00 UTC)
 - ✅ TypeScript compilation successful
+- ✅ Real-time subscriptions working
 
 ---
 
 ## 🚀 NEXT IMMEDIATE STEPS
 
-### Step 1: Commit Phase 2.1-2.3 Work
-```bash
-cd ~/Developer/workspace/prompt-improver/rigger-jobs
-git add convex/schema.ts convex/jobs.ts
-git add dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md
-git add dev/active/rigger-jobs-app/rigger-jobs-app-context.md
-git commit -m "feat: implement Phase 2.1-2.3 - Convex schema and job operations
+### Step 1: Start Phase 3 - Core UI Components
+All backend work complete. Ready to build UI.
 
-- Expand schema with jobRequests, teams, activityEvents tables
-- Add 10 indexes for query performance
-- Implement 4 job mutations with version checking
-- Implement 3 job queries with filtering
-- All mutations create activity events with 30-day TTL
-- Optimistic locking prevents concurrent edit conflicts
+**First Task**: Create `components/JobCard.tsx`
+- Display job details (description, area, requestedByName, team)
+- Add priority indicator (urgent = red border/icon)
+- Add status-based border color
+- Min 44px tap target
+- Click handler for QuickActionsModal
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+**Reference**: See tasks.md lines 116-123 for Phase 3.1 requirements
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
+### Step 2: Create StatusColumn Component
+Build column container for job cards (Phase 3.2)
 
-### Step 2: Start Phase 2.4 - Team Queries & Mutations
-Create `convex/teams.ts` with:
-1. listTeams query (all teams ordered by name)
-2. createTeam mutation (name, memberNames)
-3. getTeamStatus query (FREE vs BUSY with active job info)
-
-**Reference**: See tasks.md lines 80-88 for requirements
-
-### Step 3: Continue Phase 2.5 - Activity Queries
-Create `convex/activity.ts` with shift-aware queries
-
-### Step 4: Continue Phase 2.6 - Handover Query
-Create `convex/handover.ts` with area-grouped job data
+### Step 3: Continue Phase 3 Components
+TeamBadge, QuickActionsModal, TodayTeamsPanel, ActivityEventCard
 
 ---
 
 ## 📊 PHASE PROGRESS
 
 **Phase 1**: ✅ COMPLETE (Project Bootstrap)
-**Phase 2**: 🔄 IN PROGRESS
+**Phase 2**: ✅ COMPLETE (Convex Backend)
 - 2.1 Define Schema: ✅ COMPLETE
 - 2.2 Job Mutations: ✅ COMPLETE
 - 2.3 Job Queries: ✅ COMPLETE
-- 2.4 Team Queries & Mutations: ⏳ NEXT
-- 2.5 Activity Queries: ⏳ TODO
-- 2.6 Handover Query: ⏳ TODO
+- 2.4 Team Queries & Mutations: ✅ COMPLETE
+- 2.5 Activity Queries: ✅ COMPLETE
+- 2.6 Handover Query: ✅ COMPLETE
 
-**Phase 3-7**: ⏳ TODO (UI Components, Features, Polish, Deploy)
+**Phase 3**: ⏳ NEXT (Core UI Components)
+- 3.1 JobCard: ⏳ NEXT
+- 3.2-3.6: ⏳ TODO
+
+**Phase 4-7**: ⏳ TODO (Main Features, Polish, Deploy)
 
 ---
 
@@ -202,7 +198,7 @@ if (args.status) {
 
 ## 🚫 BLOCKERS: NONE
 
-All Phase 2.1-2.3 tasks complete. Ready to continue Phase 2.4.
+All Phase 2 backend tasks complete. Ready to start Phase 3 UI development.
 
 ---
 
@@ -231,11 +227,39 @@ git diff convex/jobs.ts  # Review jobs.ts (new file)
 ## 🔄 AFTER CONTEXT RESET
 
 1. ✅ Read this file first (SESSION-HANDOFF.md)
-2. ✅ Review detailed context: `rigger-jobs-app-context.md` (lines 67-183 for Phase 2 details)
-3. ⚠️ **COMMIT WORK** before continuing (see Step 1 above)
-4. 🚀 Start Phase 2.4: Create `convex/teams.ts`
+2. ✅ Review detailed context: `rigger-jobs-app-context.md` (complete Phase 2 implementation details)
+3. ✅ All work committed - no action needed
+4. 🚀 Start Phase 3.1: Create `components/JobCard.tsx`
 5. ✅ Mark tasks in `rigger-jobs-app-tasks.md` as you complete them
+
+## 💡 Quick Tips for Phase 3
+
+### Convex Data Fetching
+```tsx
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+// Query (auto-updates in real-time)
+const jobs = useQuery(api.jobs.listJobs, { status: "new" });
+
+// Mutation
+const updateStatus = useMutation(api.jobs.updateJobStatus);
+await updateStatus({ jobId, newStatus: "in_progress" });
+```
+
+### Type Imports
+```tsx
+import { Doc } from "@/convex/_generated/dataModel";
+
+type Job = Doc<"jobRequests">;
+type Team = Doc<"teams">;
+```
+
+### Styling Pattern
+- Mobile-first with Tailwind
+- Min 44px tap targets
+- Status colors: new (gray), in_progress (blue), delayed (red), done (green)
 
 ---
 
-**PHASE 2.1-2.3 COMPLETE ✅ - COMMIT WORK, THEN CONTINUE TO PHASE 2.4** 🚀
+**PHASE 2 COMPLETE ✅ - START PHASE 3 UI DEVELOPMENT** 🚀
