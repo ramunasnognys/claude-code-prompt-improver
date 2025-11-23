@@ -150,11 +150,11 @@
 - [x] Test all actions, including concurrent edits
 
 ### 3.5 TodayTeamsPanel Component
-- [ ] Create `components/TodayTeamsPanel.tsx`
-- [ ] Implement collapsible panel (default open on desktop, closed on mobile)
-- [ ] Display grid of team cards with status
-- [ ] Add tap handlers: tap team → filter board, tap job → scroll to card
-- [ ] Test team status logic (FREE vs BUSY)
+- [x] Create `components/TodayTeamsPanel.tsx`
+- [x] Implement collapsible panel (default open on desktop, closed on mobile)
+- [x] Display grid of team cards with status
+- [x] Add tap handlers: tap team → filter board, tap job → scroll to card
+- [x] Test team status logic (FREE vs BUSY)
 
 ### 3.6 ActivityEventCard Component
 - [ ] Create `components/ActivityEventCard.tsx`
