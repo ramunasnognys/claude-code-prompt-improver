@@ -88,17 +88,17 @@
 - [x] Verify status logic with sample jobs
 
 ### 2.5 Activity Queries
-- [ ] Create `convex/activity.ts`
-- [ ] Implement `getTodayActivity` query (events from current shift start):
+- [x] Create `convex/activity.ts`
+- [x] Implement `getTodayActivity` query (events from current shift start):
   - If before 19:00, show day shift (07:00-19:00)
   - If after 19:00, show night shift (19:00-07:00 next day)
-- [ ] Implement `getActivityByDate` query (historical events for specific date)
-- [ ] Implement `getActivityByJob` query (job-specific timeline)
-- [ ] Implement `getActivityByTeam` query (team-specific events)
-- [ ] Implement activity event archival: TTL = 30 days (auto-delete old events)
-- [ ] Add Convex cron job to archive events older than 30 days
-- [ ] Test filtering works correctly
-- [ ] Verify chronological order (newest first), archival tested
+- [x] Implement `getActivityByDate` query (historical events for specific date)
+- [x] Implement `getActivityByJob` query (job-specific timeline)
+- [x] Implement `getActivityByTeam` query (team-specific events)
+- [x] Implement activity event archival: TTL = 30 days (auto-delete old events)
+- [x] Add Convex cron job to archive events older than 30 days
+- [x] Test filtering works correctly
+- [x] Verify chronological order (newest first), archival tested
 
 ### 2.6 Handover Query
 - [ ] Create `convex/handover.ts`
