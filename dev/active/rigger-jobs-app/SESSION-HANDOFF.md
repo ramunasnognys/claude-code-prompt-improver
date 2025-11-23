@@ -1,144 +1,152 @@
 # Session Handoff - Rigger Jobs App
 
-**Date**: 2025-11-23 14:20 UTC
-**Session**: Phase 2 Backend COMPLETE ✅
-**Git Branches**: `main` (convex), `rigger` (docs)
-**Context Usage**: 86k/200k (43%)
+**Date**: 2025-11-23 17:50 UTC
+**Session**: Phase 3.1-3.3 UI Components COMPLETE ✅
+**Git Branches**: `main` (components), `rigger` (docs)
+**Context Usage**: 127k/200k (64%)
 
 ---
 
-## ✅ PHASE 2 BACKEND COMPLETE
+## ✅ PHASE 3.1-3.3 UI COMPONENTS COMPLETE
 
 ### What Was Accomplished This Session
 
-**Phase 2.1: Define Convex Schema** ✅
-- Expanded `convex/schema.ts` with 3 new tables + 10 indexes
-- Deployed schema to Convex
+**Phase 3.1: JobCard Component** ✅
+- Created `components/JobCard.tsx` (75 lines)
+- React.memo optimization for real-time performance
+- Status colors, priority indicator, team badge
+- Min 44px tap target + keyboard nav
+- Test page with all variations
+- Commit: `e781486`
 
-**Phase 2.2: Job Mutations** ✅
-- Created `convex/jobs.ts` with 4 mutations (createJob, updateJobStatus, assignTeam, updateDelayReason)
-- Version checking for concurrent edit protection
-- Activity event logging with 30-day TTL
-- Commits: Previous session
+**Phase 3.2: StatusColumn Component** ✅
+- Created `components/StatusColumn.tsx` (94 lines)
+- Kanban column with sticky header + count badge
+- Empty state, fixed 320px width for mobile
+- Vertical scroll, team lookup callback
+- Test page with full board layout
+- Commit: `b0aab89`
 
-**Phase 2.3: Job Queries** ✅
-- Added 3 queries to `convex/jobs.ts` (listJobs, getJob, getJobsByTeam)
-- Real-time subscriptions working
-- Commits: Previous session
-
-**Phase 2.4: Team Queries & Mutations** ✅
-- Created `convex/teams.ts` with 2 queries + 1 mutation
-- listTeams, getTeamStatus (FREE/BUSY logic), createTeam
-- Commits: `5a0e76f`, `ce7aaa1`
-
-**Phase 2.5: Activity Queries** ✅
-- Created `convex/activity.ts` with 4 queries + internal mutation + cron
-- Shift-aware getTodayActivity (day: 07:00-19:00, night: 19:00-07:00)
-- getActivityByDate, getActivityByJob, getActivityByTeam
-- archiveOldEvents internal mutation
-- Daily cron job at 02:00 UTC
-- Commits: `98898e2`, `b11b478`
-
-**Phase 2.6: Handover Query** ✅
-- Created `convex/handover.ts` with getHandoverData query
-- Groups by module (DU/DP/DW) and area code
-- Categorizes: completed, inProgress, delayed, new
-- Includes counts and team details
-- Commits: `6788149`, `2068981`
+**Phase 3.3: TeamBadge Component** ✅
+- Created `components/TeamBadge.tsx` (86 lines)
+- FREE (green) / BUSY (blue) status colors
+- Keyboard nav, focus rings, accessibility
+- Text truncation for long team names
+- Test page with FREE/BUSY examples
+- Commit: `4c33ae2`
 
 ---
 
-## 📂 FILES CREATED/MODIFIED THIS SESSION
+## 📂 FILES CREATED THIS SESSION
 
-### New Convex Files (All Deployed ✅)
-1. **convex/schema.ts** (105 lines) - Expanded from Phase 1
-2. **convex/jobs.ts** (379 lines) - 4 mutations + 3 queries
-3. **convex/teams.ts** (78 lines) - 2 queries + 1 mutation
-4. **convex/activity.ts** (154 lines) - 4 queries + internal mutation + cron
-5. **convex/handover.ts** (143 lines) - 1 query
+### Components (rigger-jobs repo, main branch)
+1. **components/JobCard.tsx** (75 lines) - Individual job card
+2. **components/StatusColumn.tsx** (94 lines) - Kanban column
+3. **components/TeamBadge.tsx** (86 lines) - Team status badge
 
-### Documentation Updated
-1. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md**
-   - Marked Phase 2.1-2.6 complete (all checkboxes)
+### Test Pages (rigger-jobs repo, main branch)
+4. **app/test-jobcard/page.tsx** (144 lines) - JobCard test with mock data
+5. **app/test-statuscolumn/page.tsx** (272 lines) - Full Kanban board test
+6. **app/test-teambadge/page.tsx** (255 lines) - TeamBadge FREE/BUSY test
 
-2. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md**
-   - Updated to "Phase 2 COMPLETE"
-   - Added detailed implementation notes for 2.4, 2.5, 2.6
-   - Updated "Next Actions" for Phase 3
-
-3. **dev/active/rigger-jobs-app/SESSION-HANDOFF.md** (this file)
-   - Updated with complete Phase 2 status
+### Documentation (prompt-improver repo, rigger branch)
+7. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md** - Updated checkboxes
+8. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md** - Added Phase 3 implementation details
 
 ---
 
-## 🔑 KEY DECISIONS MADE
+## 🔑 KEY IMPLEMENTATION DECISIONS
 
-### 1. Optimistic Locking Pattern
-- **Decision**: Add version field to jobRequests, increment on every update
-- **Rationale**: Prevents concurrent edit conflicts with multiple users
-- **Implementation**: All mutations check version before updating
+### 1. Component Props Design
+- **JobCard**: Receives `job` + optional `team` (parent fetches team)
+- **StatusColumn**: Receives `jobs` array + `teams` array (presentational)
+- **TeamBadge**: Receives `team` + optional `activeJob` (parent computes first active job)
+- **Rationale**: Keeps components presentational, reusable, no Convex queries inside
 
-### 2. Activity Event TTL
-- **Decision**: Add TTL field, auto-archive after 30 days
-- **Rationale**: Prevents database bloat with thousands of events
-- **Implementation**: Every activity event gets ttl = timestamp + 30 days
+### 2. Performance Optimizations
+- All 3 components use React.memo
+- Prevents re-renders when other jobs/teams update
+- Critical for 50+ jobs × 6 concurrent users real-time
 
-### 3. Query Filtering Approach
-- **Decision**: Collect all jobs, filter in-memory (not using `.withIndex()` chaining)
-- **Rationale**: TypeScript type errors when reassigning query variable
-- **Trade-off**: Less optimal for large datasets, but simpler code
+### 3. Keyboard Navigation
+- All interactive components support Enter/Space keys
+- onKeyDown handlers with preventDefault
+- tabIndex={0} for keyboard focus
+- Focus rings with status-specific colors
 
-### 4. Team Swap Detection
-- **Decision**: Detect team changes in assignTeam mutation
-- **Rationale**: Different activity event types for first assignment vs swap
-- **Implementation**: Check if oldTeamId exists and differs from new teamId
+### 4. Accessibility
+- Comprehensive aria-labels with full context
+- sr-only text for screen readers
+- aria-hidden on decorative icons
+- Min 44px tap targets throughout
+
+### 5. Text Truncation Strategy
+- line-clamp-2 for job descriptions
+- truncate class for team names
+- min-w-0 on flex containers (prevents overflow)
+- flex-shrink-0 on icons (always visible)
 
 ---
 
 ## ⚠️ CRITICAL NOTES
 
 ### Git Status
-**Convex Files**: ✅ ALL COMMITTED to `main` branch
-- `5a0e76f` - Phase 2.4 Team Queries & Mutations
-- `98898e2` - Phase 2.5 Activity Queries
-- `6788149` - Phase 2.6 Handover Query
+**rigger-jobs (main branch)**: ✅ ALL COMMITTED
+- `4c33ae2` - Phase 3.3 TeamBadge
+- `b0aab89` - Phase 3.2 StatusColumn
+- `e781486` - Phase 3.1 JobCard
 
-**Documentation**: ✅ ALL COMMITTED to `rigger` branch
-- `ce7aaa1` - Mark Phase 2.4 complete
-- `b11b478` - Mark Phase 2.5 complete
-- `2068981` - Mark Phase 2.6 complete
+**prompt-improver (rigger branch)**: ✅ ALL COMMITTED
+- `bf00652` - docs: update context for Phase 3.1-3.3
+- `65458d0` - docs: mark Phase 3.3 complete
+- `422fded` - docs: mark Phase 3.2 complete
+- `89fa9ec` - docs: mark Phase 3.1 complete
 
-**ACTION REQUIRED**: None - all changes committed
+### TypeScript Compilation
+- ✅ All files compile successfully (strict mode)
+- ✅ No type errors
 
-### Convex Deployment Status
-- ✅ Schema deployed (4 tables + 10 indexes)
-- ✅ 11 queries deployed and available
-- ✅ 5 mutations deployed and available
-- ✅ 1 cron job scheduled (daily 02:00 UTC)
-- ✅ TypeScript compilation successful
-- ✅ Real-time subscriptions working
+### Test Pages Available
+- http://localhost:3001/test-jobcard
+- http://localhost:3001/test-statuscolumn
+- http://localhost:3001/test-teambadge
 
 ---
 
 ## 🚀 NEXT IMMEDIATE STEPS
 
-### Step 1: Start Phase 3 - Core UI Components
-All backend work complete. Ready to build UI.
+### Step 1: Phase 3.4 - QuickActionsModal Component
+**Complexity**: HIGH (bottom sheet on mobile, full modal on desktop)
 
-**First Task**: Create `components/JobCard.tsx`
-- Display job details (description, area, requestedByName, team)
-- Add priority indicator (urgent = red border/icon)
-- Add status-based border color
-- Min 44px tap target
-- Click handler for QuickActionsModal
+**Requirements**:
+- Radix Dialog for modal/sheet primitives
+- Bottom sheet on mobile (<768px)
+- Full modal on desktop (≥768px)
+- Three action sections:
+  1. Change Status (4 buttons: New, In Progress, Delayed, Done)
+  2. Assign Team (grid of team buttons)
+  3. Update Delay (dropdown + textarea)
+- Convex mutations with version check (concurrent edit protection)
+- Optimistic UI updates
+- Success/error toast notifications
+- Close on success
 
-**Reference**: See tasks.md lines 116-123 for Phase 3.1 requirements
+**Files to Create**:
+- `components/QuickActionsModal.tsx`
+- Test page (optional, can test inline on board)
 
-### Step 2: Create StatusColumn Component
-Build column container for job cards (Phase 3.2)
+**Dependencies Needed**:
+- Check if Radix Dialog installed: `@radix-ui/react-dialog`
+- sonner toast library (already installed)
 
-### Step 3: Continue Phase 3 Components
-TeamBadge, QuickActionsModal, TodayTeamsPanel, ActivityEventCard
+### Step 2: Phase 3.5 - TodayTeamsPanel
+Build collapsible panel with team cards grid
+
+### Step 3: Phase 3.6 - ActivityEventCard
+Simple event card component
+
+### Step 4: Phase 4.1 - Main Board Page
+Integrate all components with real Convex data
 
 ---
 
@@ -146,43 +154,15 @@ TeamBadge, QuickActionsModal, TodayTeamsPanel, ActivityEventCard
 
 **Phase 1**: ✅ COMPLETE (Project Bootstrap)
 **Phase 2**: ✅ COMPLETE (Convex Backend)
-- 2.1 Define Schema: ✅ COMPLETE
-- 2.2 Job Mutations: ✅ COMPLETE
-- 2.3 Job Queries: ✅ COMPLETE
-- 2.4 Team Queries & Mutations: ✅ COMPLETE
-- 2.5 Activity Queries: ✅ COMPLETE
-- 2.6 Handover Query: ✅ COMPLETE
-
-**Phase 3**: ⏳ NEXT (Core UI Components)
-- 3.1 JobCard: ⏳ NEXT
-- 3.2-3.6: ⏳ TODO
+**Phase 3**: ⏳ 3 of 6 COMPLETE (Core UI Components)
+- 3.1 JobCard: ✅ COMPLETE
+- 3.2 StatusColumn: ✅ COMPLETE
+- 3.3 TeamBadge: ✅ COMPLETE
+- 3.4 QuickActionsModal: ⏳ NEXT
+- 3.5 TodayTeamsPanel: ⏳ TODO
+- 3.6 ActivityEventCard: ⏳ TODO
 
 **Phase 4-7**: ⏳ TODO (Main Features, Polish, Deploy)
-
----
-
-## 🐛 ISSUES ENCOUNTERED & SOLUTIONS
-
-### Issue 1: TypeScript Query Type Errors
-**Problem**: Reassigning query variable with `.withIndex()` caused type errors
-```typescript
-// ❌ This failed:
-let query = ctx.db.query("jobRequests");
-if (args.status) {
-  query = query.withIndex("by_status", (q) => q.eq("status", args.status));
-}
-```
-
-**Solution**: Collect all jobs first, filter in-memory
-```typescript
-// ✅ This works:
-let jobs = await ctx.db.query("jobRequests").collect();
-if (args.status) {
-  jobs = jobs.filter((job) => job.status === args.status);
-}
-```
-
-**Trade-off**: Less performant for large datasets, but cleaner type safety
 
 ---
 
@@ -192,34 +172,40 @@ if (args.status) {
 ~/Developer/workspace/prompt-improver/rigger-jobs/
 ```
 
-**NOT** in `~/Developer/workspace/rigger-jobs/` (original plan location)
+**Working Directories**:
+- Components: `components/`
+- Test pages: `app/test-*/`
+- Convex backend: `convex/`
 
 ---
 
 ## 🚫 BLOCKERS: NONE
 
-All Phase 2 backend tasks complete. Ready to start Phase 3 UI development.
+All Phase 3.1-3.3 components complete and tested. Ready for Phase 3.4 QuickActionsModal.
 
 ---
 
 ## 📖 REFERENCE COMMANDS
 
-### Verify Convex Deployment
+### Verify Components
 ```bash
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-npx convex dev --once  # Deploy and verify functions
+npm run dev  # http://localhost:3001
+# Visit test pages:
+# /test-jobcard
+# /test-statuscolumn
+# /test-teambadge
 ```
 
-### Run Dev Server
+### Check Dependencies
 ```bash
-npm run dev  # http://localhost:3000
+npm list @radix-ui/react-dialog  # Check if installed for Phase 3.4
+npm list sonner  # Already installed
 ```
 
-### Check Git Status
+### TypeScript Check
 ```bash
-git status  # View uncommitted changes
-git diff convex/schema.ts  # Review schema changes
-git diff convex/jobs.ts  # Review jobs.ts (new file)
+npx tsc --noEmit  # Should pass with no errors
 ```
 
 ---
@@ -227,39 +213,41 @@ git diff convex/jobs.ts  # Review jobs.ts (new file)
 ## 🔄 AFTER CONTEXT RESET
 
 1. ✅ Read this file first (SESSION-HANDOFF.md)
-2. ✅ Review detailed context: `rigger-jobs-app-context.md` (complete Phase 2 implementation details)
+2. ✅ Review detailed context: `rigger-jobs-app-context.md` (has Phase 3 implementation details)
 3. ✅ All work committed - no action needed
-4. 🚀 Start Phase 3.1: Create `components/JobCard.tsx`
+4. 🚀 Start Phase 3.4: Create `components/QuickActionsModal.tsx`
 5. ✅ Mark tasks in `rigger-jobs-app-tasks.md` as you complete them
 
-## 💡 Quick Tips for Phase 3
+## 💡 Quick Tips for Phase 3.4
 
-### Convex Data Fetching
+### QuickActionsModal Implementation
+- Use Radix Dialog primitive
+- Responsive: bottom sheet mobile, full modal desktop
+- Media query at 768px breakpoint
+- Three sections with clear visual separation
+- Version check on all mutations (prevent concurrent edits)
+- Optimistic UI: update locally before server confirms
+- Toast on success/error using sonner
+
+### Pattern for Radix Dialog
 ```tsx
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import * as Dialog from '@radix-ui/react-dialog';
 
-// Query (auto-updates in real-time)
-const jobs = useQuery(api.jobs.listJobs, { status: "new" });
-
-// Mutation
-const updateStatus = useMutation(api.jobs.updateJobStatus);
-await updateStatus({ jobId, newStatus: "in_progress" });
+<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content className={cn(
+      // Mobile: bottom sheet
+      "fixed bottom-0 left-0 right-0 md:relative",
+      // Desktop: centered modal
+      "md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
+    )}>
+      {/* Actions here */}
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
 ```
-
-### Type Imports
-```tsx
-import { Doc } from "@/convex/_generated/dataModel";
-
-type Job = Doc<"jobRequests">;
-type Team = Doc<"teams">;
-```
-
-### Styling Pattern
-- Mobile-first with Tailwind
-- Min 44px tap targets
-- Status colors: new (gray), in_progress (blue), delayed (red), done (green)
 
 ---
 
-**PHASE 2 COMPLETE ✅ - START PHASE 3 UI DEVELOPMENT** 🚀
+**PHASE 3.1-3.3 COMPLETE ✅ - CONTINUE WITH PHASE 3.4 QUICKACTIONSMODAL** 🚀
