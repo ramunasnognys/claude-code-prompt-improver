@@ -1,29 +1,38 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-23 14:17 UTC (Phase 2 Backend COMPLETE ✅)
+**Last Updated**: 2025-11-23 17:45 UTC (Phase 3.1-3.3 UI Components COMPLETE ✅)
 
-## 🎯 Current Status: PHASE 2 BACKEND COMPLETE ✅
+## 🎯 Current Status: PHASE 3 UI COMPONENTS IN PROGRESS
 
-**Phase**: Phase 2 (Convex Backend) - **COMPLETE** ✅
-**Completed**: 2.1 Schema, 2.2 Job Mutations, 2.3 Job Queries, 2.4 Teams, 2.5 Activity, 2.6 Handover
-**Next Phase**: Phase 3 - Core UI Components
+**Phase**: Phase 3 (Core UI Components) - **3 of 6 COMPLETE** ✅
+**Completed**: 3.1 JobCard, 3.2 StatusColumn, 3.3 TeamBadge
+**In Progress**: Phase 3.4 QuickActionsModal (next task)
 **Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
-**Git Branch**: rigger (main for convex files)
-**Latest Commits**:
-- `6788149` - feat: Phase 2.6 Handover Query
-- `98898e2` - feat: Phase 2.5 Activity Queries
-- `5a0e76f` - feat: Phase 2.4 Team Queries & Mutations
+**Git Branches**:
+  - `main` - Component files (rigger-jobs repo)
+  - `rigger` - Documentation updates (prompt-improver repo)
+**Latest Commits (main)**:
+- `4c33ae2` - feat: Phase 3.3 TeamBadge component
+- `b0aab89` - feat: Phase 3.2 StatusColumn component
+- `e781486` - feat: Phase 3.1 JobCard component
+**Latest Commits (rigger)**:
+- `65458d0` - docs: mark Phase 3.3 TeamBadge complete
+- `422fded` - docs: mark Phase 3.2 StatusColumn complete
+- `89fa9ec` - docs: mark Phase 3.1 JobCard complete
 
-### Session Summary (2025-11-23 - PHASE 2 COMPLETE)
+### Session Summary (2025-11-23 - PHASE 3.1-3.3 UI COMPONENTS)
 **What Was Accomplished This Session**:
-- ✅ Phase 2.1: Convex schema expanded with jobRequests, teams, activityEvents tables
-- ✅ Phase 2.2: Job mutations implemented (createJob, updateJobStatus, assignTeam, updateDelayReason)
-- ✅ Phase 2.3: Job queries implemented (listJobs, getJob, getJobsByTeam)
-- ✅ Phase 2.4: Team queries & mutations (listTeams, getTeamStatus, createTeam)
-- ✅ Phase 2.5: Activity queries + cron job (getTodayActivity, getActivityByDate, getActivityByJob, getActivityByTeam, archiveOldEvents)
-- ✅ Phase 2.6: Handover query (getHandoverData - groups by module/area)
-- ✅ All backend functions deployed and tested in Convex dashboard
-- ✅ **ENTIRE PHASE 2 BACKEND COMPLETE** - Ready for UI development
+- ✅ Phase 3.1: JobCard component (mobile-optimized with React.memo, status colors, priority indicator)
+- ✅ Phase 3.2: StatusColumn component (Kanban column with header, count, empty state, horizontal scroll)
+- ✅ Phase 3.3: TeamBadge component (FREE/BUSY status colors, keyboard nav, accessibility)
+- ✅ Created comprehensive test pages for all 3 components
+- ✅ All components compiled successfully (TypeScript strict mode)
+- ✅ All changes committed to git (6 commits total)
+- ✅ **READY FOR PHASE 3.4** - QuickActionsModal (complex: bottom sheet + Radix Dialog)
+
+**Previous Sessions**:
+- ✅ Phase 2 (All Backend): Convex schema, mutations, queries, cron jobs
+- ✅ Phase 1 (Bootstrap): Next.js + Convex + Clerk setup
 
 **Previous Session (Phase 1)**:
 - ✅ Phase 1.1: Next.js project initialized with TypeScript, Tailwind, App Router
@@ -324,6 +333,98 @@
 
 ---
 
+## 🎯 Phase 3 Implementation Details (UI Components)
+
+### 3.1 JobCard Component (COMPLETE ✅)
+
+**File**: `components/JobCard.tsx` (75 lines)
+**Test Page**: `app/test-jobcard/page.tsx` (144 lines)
+
+**Props Interface**:
+```ts
+interface JobCardProps {
+  job: Doc<"jobRequests">;
+  team?: Doc<"teams"> | null;
+  onClick?: () => void;
+}
+```
+
+**Key Features**:
+- React.memo optimization for real-time performance (50+ jobs)
+- Status-based left border colors (new=gray, in_progress=blue, delayed=red, done=green)
+- Priority indicator: urgent = red AlertCircle icon
+- Area badge + description truncation (line-clamp-2)
+- Team badge shows team name if assigned
+- Min 44px height for mobile tap targets
+- Active scale feedback (0.98) on tap
+- Full keyboard support (Enter/Space keys with onKeyDown handler)
+- Comprehensive accessibility (aria-label with job context, role="button", tabIndex=0)
+- Dark mode support
+
+**Testing**: Test page with 4 mock jobs (all statuses, urgent/normal, with/without team)
+
+### 3.2 StatusColumn Component (COMPLETE ✅)
+
+**File**: `components/StatusColumn.tsx` (94 lines)
+**Test Page**: `app/test-statuscolumn/page.tsx` (272 lines)
+
+**Props Interface**:
+```ts
+interface StatusColumnProps {
+  status: "new" | "in_progress" | "delayed" | "done";
+  jobs: Array<Doc<"jobRequests">>;
+  teams?: Array<Doc<"teams">>;
+  onJobClick?: (job: Doc<"jobRequests">) => void;
+}
+```
+
+**Key Features**:
+- React.memo optimization
+- Sticky header with status name + job count badge
+- Status-specific header colors (matches JobCard border colors)
+- Empty state with Inbox icon and message
+- Fixed 320px width (optimal for mobile horizontal scroll)
+- Vertical scroll within column (overflow-y-auto)
+- Team lookup callback (useCallback) for JobCard team prop
+- Dark mode support
+- Parent configures horizontal scroll with `flex overflow-x-auto` pattern
+
+**Testing**: Test page with full Kanban board (4 columns, 2 new, 3 in progress, 1 delayed, 2 done)
+
+### 3.3 TeamBadge Component (COMPLETE ✅)
+
+**File**: `components/TeamBadge.tsx` (86 lines)
+**Test Page**: `app/test-teambadge/page.tsx` (255 lines)
+
+**Props Interface**:
+```ts
+interface TeamBadgeProps {
+  team: Doc<"teams">;
+  activeJob?: Doc<"jobRequests"> | null;  // Parent computes first active job
+  onClick?: () => void;
+}
+```
+
+**Key Features**:
+- React.memo optimization
+- FREE (green) vs BUSY (blue) status colors derived from activeJob presence
+- Team name with truncation support (long names)
+- Member count display (singular/plural handling)
+- FREE status: CheckCircle icon
+- BUSY status: Shows area code + "In Progress" label
+- Min 44px tap target
+- Full keyboard navigation (Enter/Space keys with onKeyDown)
+- Focus ring with status-specific colors (green for FREE, blue for BUSY)
+- Comprehensive accessibility (aria-label, sr-only text, aria-hidden on icons)
+- Text truncation handling (min-w-0 on flex containers)
+- Dark mode support
+
+**Design Decision**: Parent computes activeJob (first active job for team), component derives FREE/BUSY. This keeps component presentational and reusable.
+
+**Testing**: Test page with 6 teams (3 FREE, 3 BUSY), grid layout, keyboard navigation instructions
+
+---
+
 ### Current Implementation State
 
 **What's Working** (Phase 1 + Phase 2 COMPLETE):
@@ -344,33 +445,47 @@
 - ✅ **Handover query complete** (getHandoverData with module/area grouping)
 - ✅ **ALL BACKEND FUNCTIONS DEPLOYED TO CONVEX** ✅
 
-**What's Not Yet Implemented** (Phase 3+):
-- ❌ JobCard component (Phase 3.1)
-- ❌ StatusColumn component (Phase 3.2)
-- ❌ TeamBadge component (Phase 3.3)
-- ❌ QuickActionsModal component (Phase 3.4)
+**What's Working** (Phase 3.1-3.3 COMPLETE):
+- ✅ **JobCard component** (Phase 3.1) - Status colors, priority indicator, team badge, min 44px tap
+- ✅ **StatusColumn component** (Phase 3.2) - Kanban column, header with count, empty state, horizontal scroll
+- ✅ **TeamBadge component** (Phase 3.3) - FREE/BUSY colors, keyboard nav, accessibility
+- ✅ Test pages for all 3 components with mock data
+- ✅ TypeScript compilation successful (strict mode)
+- ✅ All components use React.memo for performance
+- ✅ Mobile-first responsive design with Tailwind v4
+
+**What's Not Yet Implemented** (Phase 3.4+):
+- ❌ QuickActionsModal component (Phase 3.4) - NEXT TASK
 - ❌ TodayTeamsPanel component (Phase 3.5)
 - ❌ ActivityEventCard component (Phase 3.6)
-- ❌ Kanban board UI (Phase 4)
-- ❌ Real-time toast notifications (Phase 6)
-- ❌ Mobile-first responsive UI components (Phase 3-4)
+- ❌ Main Board page with Convex integration (Phase 4.1)
+- ❌ New Job form (Phase 4.2)
+- ❌ Real-time toast notifications (Phase 6.1)
+- ❌ Optimistic UI updates (Phase 6.2)
 
 ### Critical Information for Next Session
 
 **📍 Project Status**:
 - Phase 1 COMPLETE ✅
-- **Phase 2 COMPLETE ✅** (All backend functions implemented and deployed)
+- Phase 2 COMPLETE ✅ (All backend)
+- **Phase 3 IN PROGRESS** - 3 of 6 components complete
 - Project location: `~/Developer/workspace/prompt-improver/rigger-jobs/`
 - Git branches:
-  - `rigger` for documentation updates
-  - `main` for convex files (committed)
+  - `main` - Component files (rigger-jobs repo)
+  - `rigger` - Documentation (prompt-improver repo)
 - **All changes committed** ✅
 
 **🎯 Next Actions**:
-1. **START PHASE 3**: Core UI Components
-2. Create `components/JobCard.tsx` (Phase 3.1)
-3. Create `components/StatusColumn.tsx` (Phase 3.2)
-4. Create other Phase 3 components
+1. **CONTINUE PHASE 3.4**: QuickActionsModal Component
+   - Bottom sheet on mobile (Radix Dialog)
+   - Full modal on desktop
+   - Actions: Change Status, Assign Team, Update Delay
+   - Convex mutations with version check
+   - Optimistic UI updates
+   - Toast notifications
+2. Phase 3.5: TodayTeamsPanel
+3. Phase 3.6: ActivityEventCard
+4. Phase 4: Main Board page with real Convex data
 
 **⚠️ Critical Notes**:
 - ✅ Area codes FIXED (24 specific codes in lib/constants.ts)
@@ -386,13 +501,18 @@
 - `convex/activity.ts` - 4 queries + 1 internal mutation + cron (154 lines)
 - `convex/handover.ts` - 1 query (143 lines)
 
-**📂 Frontend Files to Create Next (Phase 3)**:
-- `components/JobCard.tsx` - Individual job card
-- `components/StatusColumn.tsx` - Column for status groups
-- `components/TeamBadge.tsx` - Team status indicator
-- `components/QuickActionsModal.tsx` - Bottom sheet for actions
-- `components/TodayTeamsPanel.tsx` - Team overview panel
-- `components/ActivityEventCard.tsx` - Activity event display
+**📂 Frontend Files Created (Phase 3.1-3.3 - COMPLETE)**:
+- ✅ `components/JobCard.tsx` - Individual job card (75 lines)
+- ✅ `components/StatusColumn.tsx` - Kanban column (94 lines)
+- ✅ `components/TeamBadge.tsx` - Team status badge (86 lines)
+- ✅ `app/test-jobcard/page.tsx` - Test page with mock data (144 lines)
+- ✅ `app/test-statuscolumn/page.tsx` - Test page with Kanban layout (272 lines)
+- ✅ `app/test-teambadge/page.tsx` - Test page with FREE/BUSY examples (255 lines)
+
+**📂 Frontend Files to Create Next (Phase 3.4+)**:
+- ❌ `components/QuickActionsModal.tsx` - Bottom sheet/modal for job actions (NEXT)
+- ❌ `components/TodayTeamsPanel.tsx` - Team overview panel
+- ❌ `components/ActivityEventCard.tsx` - Activity event display
 
 ### Important Context for Next Session
 - **Project Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
