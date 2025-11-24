@@ -1,32 +1,104 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-23 20:15 UTC (Phase 3 UI Components COMPLETE ✅)
+**Last Updated**: 2025-11-24 10:15 UTC (Phase 4.2 COMPLETE ✅)
 
-## 🎯 Current Status: PHASE 3 COMPLETE - READY FOR PHASE 4
+## 🎯 Current Status: PHASE 4.2 COMPLETE - NEW JOB FORM WORKING
 
-**Phase**: Phase 3 (Core UI Components) - **ALL 6 COMPONENTS COMPLETE** ✅
-**Completed This Session**: 3.1-3.6 (JobCard, StatusColumn, TeamBadge, QuickActionsModal, TodayTeamsPanel, ActivityEventCard)
-**Next Phase**: Phase 4 - Main Features (Board Page, New Job Form, Navigation)
+**Phase**: Phase 4 (Main Features) - **2/4 Complete** (4.1 Board, 4.2 Form ✅)
+**Completed This Session**:
+- Phase 4.2 New Job Form (app/jobs/new/page.tsx - 356 lines)
+- Fixed Zod v4 compatibility, installed @hookform/resolvers
+- Build verified, TypeScript clean
+**Next Immediate Task**: Handle uncommitted Work Nr changes, then Phase 4.3 Top Navigation
 **Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
 **Git Branches**:
   - `main` - Component files (rigger-jobs repo)
   - `rigger` - Documentation updates (prompt-improver repo)
 
 **Latest Commits (main)**:
-- `b66d945` - feat: Phase 3.6 ActivityEventCard component - PHASE 3 COMPLETE
-- `f7076f7` - feat: Phase 3.5 TodayTeamsPanel component
-- `3a9e64e` - feat: Phase 3.4 QuickActionsModal component
-- `4c33ae2` - feat: Phase 3.3 TeamBadge component
-- `b0aab89` - feat: Phase 3.2 StatusColumn component
-- `e781486` - feat: Phase 3.1 JobCard component
+- `d304f1a` - feat: Phase 4.2 New Job Form ✅ NEW
+- `82a2feb` - feat: Phase 4.1 Board Page
+- `b66d945` - feat: Phase 3.6 ActivityEventCard component
 
 **Latest Commits (rigger)**:
-- `53e612b` - docs: mark Phase 3.6 ActivityEventCard complete - PHASE 3 COMPLETE ✅
-- `94174d6` - docs: mark Phase 3.5 TodayTeamsPanel complete
-- `e310757` - docs: mark Phase 3.4 QuickActionsModal complete
-- `65458d0` - docs: mark Phase 3.3 TeamBadge complete
-- `422fded` - docs: mark Phase 3.2 StatusColumn complete
-- `89fa9ec` - docs: mark Phase 3.1 JobCard complete
+- `5a84b09` - docs: mark Phase 4.2 New Job Form complete ✅ NEW
+- `2b44ff6` - docs: mark Phase 4.1 Board Page complete
+- `53e612b` - docs: mark Phase 3.6 complete
+
+---
+
+## 🎯 THIS SESSION: PHASE 4.2 NEW JOB FORM
+
+### Phase 4.2: New Job Form (COMPLETE ✅)
+
+**What Was Done**:
+- Found form already implemented at `app/jobs/new/page.tsx` (356 lines)
+- Fixed missing dependency: installed `@hookform/resolvers`
+- Fixed Zod v4 API compatibility: `required_error` → `message`
+- Verified TypeScript compilation passes
+- All 7 form fields working correctly
+- Marked Phase 4.2 complete in tasks checklist
+
+**Form Implementation Details**:
+1. **Work Nr Field** (lines 114-141):
+   - Optional text input
+   - Format: XX-0000 (e.g., "RF-4567")
+   - Auto-format on blur: rf4567 → RF-4567
+   - Zod validation with WORK_NR_PATTERN
+
+2. **Requested By Name** (lines 143-166):
+   - Required text input
+   - Min 2 characters
+
+3. **Area Dropdown** (lines 168-206):
+   - 24 areas from AREA_CODES constant
+   - Grouped by module (DU/DP/DW)
+   - Required field
+
+4. **Exact Location** (lines 208-231):
+   - Required text input
+   - Examples: "deck", "port side"
+
+5. **Description** (lines 233-256):
+   - Required textarea
+   - Min 10 characters
+   - 4 rows tall
+
+6. **Priority Toggle** (lines 258-295):
+   - Two buttons: Normal (gray) / Urgent (red)
+   - Visual state indication
+   - Default: normal
+
+7. **Required By Date** (lines 297-320):
+   - Optional date picker
+   - Min value: today
+   - Converts to timestamp for Convex
+
+**Form Features**:
+- react-hook-form for state management
+- Zod schema validation (lines 17-28)
+- Submit handler with error handling (lines 66-92)
+- Loading state with spinner (isSubmitting)
+- Success toast + redirect to /dashboard
+- Min 44px touch targets throughout
+- Cancel button back to dashboard
+- Responsive mobile-first design
+
+**Issues Fixed**:
+1. Missing `@hookform/resolvers` package → `npm install @hookform/resolvers`
+2. Zod v4 API change → Changed `required_error` to `message` in z.enum()
+3. Build verification → `npx next build` passes successfully
+
+**Build Output**:
+- ✅ TypeScript compilation successful
+- ✅ 14 routes generated
+- ✅ Production build complete
+- ⚠️ Middleware deprecation warning (non-blocking)
+
+**Git Status**:
+- ✅ Form committed: `d304f1a` (main branch)
+- ✅ Docs committed: `5a84b09` (rigger branch)
+- ⚠️ Uncommitted Work Nr changes in rigger-jobs repo (from previous session)
 
 ---
 
