@@ -1,33 +1,34 @@
 # Rigger Job Management App - Context & Key Decisions
 
-**Last Updated**: 2025-11-24 10:15 UTC (Phase 4.2 COMPLETE ✅)
+**Last Updated**: 2025-11-24 11:30 UTC (Phase 4.2 + Work Nr COMPLETE ✅)
 
-## 🎯 Current Status: PHASE 4.2 COMPLETE - NEW JOB FORM WORKING
+## 🎯 Current Status: WORK NR PROPERTY IMPLEMENTED - READY FOR PHASE 4.3
 
 **Phase**: Phase 4 (Main Features) - **2/4 Complete** (4.1 Board, 4.2 Form ✅)
 **Completed This Session**:
 - Phase 4.2 New Job Form (app/jobs/new/page.tsx - 356 lines)
+- Work Nr property implementation (6 files modified)
 - Fixed Zod v4 compatibility, installed @hookform/resolvers
-- Build verified, TypeScript clean
-**Next Immediate Task**: Handle uncommitted Work Nr changes, then Phase 4.3 Top Navigation
+- All builds verified, TypeScript clean
+**Next Immediate Task**: Phase 4.3 Top Navigation component
 **Location**: `~/Developer/workspace/prompt-improver/rigger-jobs/`
 **Git Branches**:
   - `main` - Component files (rigger-jobs repo)
   - `rigger` - Documentation updates (prompt-improver repo)
 
 **Latest Commits (main)**:
-- `d304f1a` - feat: Phase 4.2 New Job Form ✅ NEW
+- `43b4cfb` - feat: add Work Nr property to job tracking ✅ NEWEST
+- `d304f1a` - feat: Phase 4.2 New Job Form
 - `82a2feb` - feat: Phase 4.1 Board Page
-- `b66d945` - feat: Phase 3.6 ActivityEventCard component
 
 **Latest Commits (rigger)**:
-- `5a84b09` - docs: mark Phase 4.2 New Job Form complete ✅ NEW
-- `2b44ff6` - docs: mark Phase 4.1 Board Page complete
-- `53e612b` - docs: mark Phase 3.6 complete
+- `f26d62d` - docs: mark Work Nr property complete ✅ NEWEST
+- `876b5ad` - docs: update dev docs for Phase 4.2 completion
+- `5a84b09` - docs: mark Phase 4.2 New Job Form complete
 
 ---
 
-## 🎯 THIS SESSION: PHASE 4.2 NEW JOB FORM
+## 🎯 THIS SESSION: PHASE 4.2 + WORK NR PROPERTY
 
 ### Phase 4.2: New Job Form (COMPLETE ✅)
 
@@ -98,7 +99,69 @@
 **Git Status**:
 - ✅ Form committed: `d304f1a` (main branch)
 - ✅ Docs committed: `5a84b09` (rigger branch)
-- ⚠️ Uncommitted Work Nr changes in rigger-jobs repo (from previous session)
+
+### Work Nr Property Implementation (COMPLETE ✅)
+
+**What Was Done**:
+- Reviewed uncommitted changes from previous session (6 files)
+- Verified implementation complete and working
+- Tested TypeScript compilation (build passes)
+- Committed all changes
+
+**Implementation Details** (Commit `43b4cfb`):
+
+1. **Schema & Backend** (convex/schema.ts, convex/jobs.ts):
+   - Added `workNr: v.optional(v.string())` to jobRequests table
+   - Added `by_work_nr` index for queries
+   - Server-side validation in createJob mutation (XX-0000 format)
+   - Throws error if invalid format provided
+
+2. **Utilities** (lib/constants.ts):
+   - `WORK_NR_PATTERN` regex: `/^[A-Z]{2}-\d{4}$/`
+   - `WORK_NR_FORMAT` constant: "XX-0000"
+   - `isValidWorkNr(workNr: string)` validation function
+   - `formatWorkNr(input: string)` auto-format function
+     - Removes spaces, converts to uppercase
+     - Auto-adds hyphen: rf4567 → RF-4567
+     - Returns input if can't format
+   - `WorkNr` type alias
+
+3. **UI Components**:
+   - **JobCard.tsx**:
+     - Displays workNr in blue badge (bold, larger than area)
+     - Conditional render (only if workNr exists)
+     - Area badge styled secondary with opacity
+     - Format: `[RF-4567] [DU010]`
+
+   - **TeamBadge.tsx**:
+     - Shows workNr instead of area in BUSY status
+     - Fallback to area if no workNr
+     - Blue color for emphasis
+     - Format: `RF-4567` or `DU010`
+
+   - **QuickActionsModal.tsx**:
+     - Includes workNr in modal description
+     - Format: `RF-4567 • Job in DU010 • description...`
+     - Conditional render with bullet separators
+
+**Features**:
+- Not unique (multiple jobs can share same work package) ✅
+- Optional field (not required for new jobs) ✅
+- Graceful degradation (existing jobs display without workNr) ✅
+- Auto-format on blur in form ✅
+- Prominent display (blue badge, bold, larger) ✅
+- Backward compatible (no breaking changes) ✅
+
+**Testing**:
+- ✅ TypeScript compilation: Build passes (14 routes)
+- ✅ Validation: Server rejects invalid formats
+- ✅ Display: Prominent in JobCard, TeamBadge, Modal
+- ✅ Form integration: Auto-format works correctly
+
+**Git Status**:
+- ✅ Work Nr committed: `43b4cfb` (main branch)
+- ✅ Docs committed: `f26d62d` (rigger branch)
+- ✅ All changes committed, repos clean
 
 ---
 
