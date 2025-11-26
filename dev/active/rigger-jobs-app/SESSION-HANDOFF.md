@@ -1,368 +1,203 @@
 # Session Handoff - Rigger Jobs App
-
-**Date**: 2025-11-24 11:30 UTC
-**Session**: Phase 4.2 + Work Nr COMPLETE ✅
-**Git Branches**: `main` (rigger-jobs), `rigger` (prompt-improver)
-**Context Usage**: 183k/200k (91%) - approaching limit
+**Date**: 2025-11-25
+**Status**: DASHBOARD UI REDESIGN COMPLETE
 
 ---
 
-## ✅ THIS SESSION: PHASE 4.2 + WORK NR PROPERTY COMPLETE
+## What Was Completed This Session
 
-### What Was Accomplished This Session
+### Dashboard UI Redesign ✅ COMPLETE (All 6 Phases)
 
-**1. Phase 4.2 New Job Form - IMPLEMENTATION COMPLETE** ✅
-- **Status**: Form already fully implemented, verified and fixed
-- **File**: `app/jobs/new/page.tsx` (356 lines)
-- **Action**: Verified implementation, fixed Zod v4 compatibility, installed missing dependency
-- **Result**: Build passes, TypeScript clean, all 7 form fields working
+**Goal**: Dense/compact mobile-first dashboard with tab-based status switching, simplified navigation, and bottom sheet job creation.
 
-**Key Implementation Details**:
-- ✅ Work Nr field (optional, auto-format on blur: rf4567 → RF-4567) - Lines 114-141
-- ✅ Requested By Name (required, min 2 chars) - Lines 143-166
-- ✅ Area dropdown (24 areas grouped DU/DP/DW) - Lines 168-206
-- ✅ Exact Location (required) - Lines 208-231
-- ✅ Description textarea (required, min 10 chars) - Lines 233-256
-- ✅ Priority toggle (Normal/Urgent with visual states) - Lines 258-295
-- ✅ Required By date picker (optional, min=today) - Lines 297-320
-- ✅ Form validation with react-hook-form + Zod - Lines 16-53
-- ✅ Connected to createJob mutation - Lines 66-92
-- ✅ Redirects to /dashboard on success with toast - Lines 84-85
-- ✅ Min 44px touch targets, mobile-first throughout
-
-**Issues Fixed This Session**:
-1. **Missing Dependency**: Installed `@hookform/resolvers` package
-2. **Zod v4 API Change**: Fixed `required_error` → `message` in enum validation (line 23)
-3. **Build Verification**: Confirmed TypeScript compilation passes with no errors
-
-**Testing Verification**:
-- ✅ TypeScript: Build passes (npx next build)
-- ✅ Form validation: Zod schema validates all fields
-- ✅ Work Nr: Auto-format logic implemented
-- ✅ Priority toggle: Visual states working (Normal=gray, Urgent=red)
-- ✅ Responsive: 44px min touch targets throughout
-
-**2. Work Nr Property Implementation - COMPLETE** ✅
-- **Status**: Reviewed, verified, and committed from previous session
-- **Files Modified**: 6 files (schema, jobs, constants, 3 UI components)
-- **Action**: Reviewed uncommitted changes, verified build, committed
-- **Result**: All Work Nr requirements implemented and working
-
-**Key Implementation Details**:
-- Schema: `workNr: v.optional(v.string())` + `by_work_nr` index
-- Backend: Server validation (XX-0000 format) in createJob mutation
-- Utilities: formatWorkNr() auto-format helper, isValidWorkNr() validation
-- JobCard: Blue badge display (bold, prominent, larger than area)
-- TeamBadge: Shows workNr in BUSY status (fallback to area)
-- QuickActionsModal: Includes workNr in description
-- Features: Optional, backward compatible, graceful degradation
-
-**Build Verification**:
-- ✅ TypeScript compilation successful (14 routes)
-- ✅ Server validation working (rejects invalid formats)
-- ✅ UI display correct (blue badges, conditional render)
-- ✅ Form integration working (auto-format on blur)
+**Design Decisions**:
+- Quick Overview focus (glanceable, not power-user)
+- Dense/Compact style (smaller text, tight spacing)
+- Mobile-First with tabs (not horizontal scroll)
+- Bottom sheet for quick job creation
 
 ---
 
-## 📂 FILES MODIFIED THIS SESSION
+### Phase 1: Compact JobCard + StatusColumn ✅
+**Files Modified**:
+- `components/JobCard.tsx` - p-4→p-2, single-line description, smaller badges
+- `components/StatusColumn.tsx` - 320px→260/280px width, gap-3→gap-1.5
+- `components/SkeletonJobCard.tsx` - matching compact sizes
+- `components/SkeletonStatusColumn.tsx` - matching compact sizes
 
-### Code (rigger-jobs repo - main branch)
-1. **app/jobs/new/page.tsx** - New file (356 lines) - Complete new job form
-2. **app/jobs/page.tsx** - Updated "Create Job" button link
-3. **package.json** - Added `@hookform/resolvers` dependency
-4. **package-lock.json** - Dependency lockfile updated
-5. **pnpm-lock.yaml** - pnpm lockfile updated
-
-### Documentation (prompt-improver repo - rigger branch)
-1. **dev/active/rigger-jobs-app/rigger-jobs-app-tasks.md** - Marked Phase 4.2 complete with verification notes
-2. **dev/active/rigger-jobs-app/SESSION-HANDOFF.md** - Updated for Phase 4.2 session (this file)
-3. **dev/active/rigger-jobs-app/rigger-jobs-app-context.md** - Will be updated next
+**Result**: ~40% card height reduction, more jobs visible
 
 ---
 
-## 🔑 CRITICAL IMPLEMENTATION DETAILS
+### Phase 2: Dashboard Header (Replaces Teams Panel) ✅
+**New Files**:
+- `components/DashboardHeader.tsx` - inline status counts + team summary badge
+- `components/TeamStatusModal.tsx` - modal for full team grid
 
-### Board Page Architecture
-
-**File**: `app/dashboard/page.tsx`
-
-**Key Features**:
-1. **Real-time Convex Queries**:
-   ```typescript
-   const jobs = useQuery(api.jobs.listJobs, {});
-   const teams = useQuery(api.teams.listTeams);
-   ```
-
-2. **Status-based Filtering**:
-   ```typescript
-   const filteredJobs = useMemo(() => {
-     const activeJobs = teamFilter
-       ? jobs.filter(j => j.assignedTeamId === teamFilter)
-       : jobs;
-
-     return {
-       new: activeJobs.filter(j => j.status === 'new'),
-       in_progress: activeJobs.filter(j => j.status === 'in_progress'),
-       delayed: activeJobs.filter(j => j.status === 'delayed'),
-       done: activeJobs.filter(j => j.status === 'done')
-     };
-   }, [jobs, teamFilter]);
-   ```
-
-3. **Modal State Management**:
-   ```typescript
-   const [modalOpen, setModalOpen] = useState(false);
-   const [selectedJob, setSelectedJob] = useState<Doc<"jobRequests"> | null>(null);
-
-   const handleJobClick = useCallback((job: Doc<"jobRequests">) => {
-     setSelectedJob(job);
-     setModalOpen(true);
-   }, []);
-   ```
-
-4. **Team Filtering**:
-   - Click team badge → toggles filter
-   - "Clear filter" link appears when active
-   - Header shows filtered status
-
-5. **Component Integration**:
-   - `<TodayTeamsPanel>` - collapsed by default, shows team status
-   - 4x `<StatusColumn>` - horizontal scroll on mobile
-   - `<QuickActionsModal>` - conditional render based on selectedJob
+**Changes**:
+- Removed TodayTeamsPanel from jobs page
+- Header shows: [4 New] [3 In Progress] [1 Delayed] [5 Done] | [2 FREE / 4 BUSY]
+- Tap team badge opens TeamStatusModal
 
 ---
 
-## 📊 GIT COMMITS
+### Phase 3: Mobile Status Tabs ✅
+**New Files**:
+- `components/MobileStatusTabs.tsx` - tab bar for mobile status switching
 
-### rigger-jobs (main branch) - 2 new commits
-- `43b4cfb` - feat: add Work Nr property to job tracking
-- `d304f1a` - feat: Phase 4.2 New Job Form
-
-### prompt-improver (rigger branch) - 4 new commits
-- `0b868e8` - docs: update context with Work Nr implementation ✅ NEWEST
-- `f26d62d` - docs: mark Work Nr property complete
-- `876b5ad` - docs: update dev docs for Phase 4.2 completion
-- `5a84b09` - docs: mark Phase 4.2 New Job Form complete
-
-**Total Commits This Session**: 6 commits (2 code, 4 docs)
+**Changes**:
+- `app/jobs/page.tsx`:
+  - Mobile (< md): Shows tabs + single column job list
+  - Desktop (>= md): Shows horizontal Kanban columns
+- Added `mobileStatus` state, `jobCounts` memo, `getTeam` helper
 
 ---
 
-## ⚠️ CRITICAL NOTES
+### Phase 4: Simplified Bottom Navigation + FAB ✅
+**Files Modified**:
+- `components/BottomNav.tsx` - reduced from 4 tabs to 2 (Jobs, Activity)
 
-### Git Status
-**rigger-jobs (main branch)**: ✅ ALL COMMITTED
-- Work Nr property implementation committed (`43b4cfb`)
-- No uncommitted changes
+**New Files**:
+- `components/FAB.tsx` - floating action button for new job
 
-**prompt-improver (rigger branch)**: ⚠️ UNCOMMITTED CHANGES
-- Modified: SESSION-HANDOFF.md (documenting Work Nr completion)
-- **Action Required**: Commit documentation updates
-
-### TypeScript Compilation
-✅ **All files compile successfully** (Next.js build passes, no errors)
-- Verified with: `npx next build`
-- Production build successful
-- 14 routes generated
-
-### Dev Server
-- Command: `npm run dev`
-- URL: http://localhost:3000 (or http://localhost:3001 if port conflicts)
-- Status: Not currently running
-- Start with: `cd ~/Developer/workspace/prompt-improver/rigger-jobs && npm run dev`
-
-### Routes Available
-- `/` - Landing page (redirects to /dashboard if signed in)
-- `/dashboard` - Main board page ✅
-- `/jobs` - Jobs overview page with "Create Job" button
-- `/jobs/new` - **NEW JOB FORM** ✅ NEW THIS SESSION
-- `/test-jobcard` - JobCard test page
-- `/test-statuscolumn` - StatusColumn test page
-- `/test-teambadge` - TeamBadge test page
-- `/test-quickactionsmodal` - QuickActionsModal test page
-- `/test-todayteamspanel` - TodayTeamsPanel test page
-- `/test-activityeventcard` - ActivityEventCard test page
+**Changes**:
+- BottomNav: icon-only, smaller (48px), max-w-xs centered
+- FAB: bottom-right position, opens create job sheet
+- Handover/Admin moved to UserMenu dropdown
 
 ---
 
-## 🚀 NEXT IMMEDIATE STEPS
+### Phase 5: Bottom Sheet Job Creation ✅
+**New Files**:
+- `components/QuickCreateJobSheet.tsx` - compact bottom sheet form
 
-### ~~**PRIORITY 1: Handle Uncommitted Work Nr Changes**~~ ✅ **COMPLETE**
-
-**Status**: Work Nr property implementation reviewed and committed
-**Commit**: `43b4cfb` - feat: add Work Nr property to job tracking
-
-**What Was Implemented**:
-- Schema: Added `workNr: v.optional(v.string())` + index
-- Backend: Server-side validation (XX-0000 format)
-- Utilities: formatWorkNr(), isValidWorkNr() helpers
-- UI: Prominent display in JobCard (blue badge), TeamBadge status, QuickActionsModal
-- Features: Auto-format, backward compatible, graceful degradation
-
-**Build Status**: ✅ All files compile successfully (14 routes)
-
-### **PRIORITY 1: Phase 4.3 - Top Navigation** (Next Feature)
-
-**File to Create**: `components/TopNav.tsx`
-
-**Requirements**:
-1. Logo/app name (left side)
-2. "Today's Teams" toggle button (mobile only - toggles TodayTeamsPanel)
-3. "+ New Job" button → `/jobs/new` ✅ (form now exists!)
-4. Clerk UserButton (right side - user avatar, sign out)
-5. Responsive behavior (mobile vs desktop)
-6. Fixed position at top
-7. Add to `app/layout.tsx`
-
-**Testing**:
-- Click "+ New Job" → redirects to form
-- Click user avatar → shows Clerk menu
-- Mobile: "Today's Teams" button visible
-- Desktop: "Today's Teams" button hidden (panel open by default)
-
-### **PRIORITY 2: Phase 4.4 - Bottom Navigation (Mobile)**
-
-**File to Create**: `components/BottomNav.tsx`
-
-**Requirements**:
-1. Three tabs: Board | Activity | Handover
-2. Fixed position at bottom (mobile only)
-3. Hidden on desktop (md:hidden)
-4. Active state styling
-5. Icons + labels
-6. Add to `app/layout.tsx`
+**Features**:
+- Grouped fields: Requested By, Area+Location (row), Description, Priority
+- Optional fields (collapsed): Work Nr, Required By
+- "Full form" link to /jobs/new
+- Uses createJob mutation
 
 ---
 
-## 📊 PHASE PROGRESS
-
-**Phase 1**: ✅ COMPLETE (Project Bootstrap)
-**Phase 2**: ✅ COMPLETE (Convex Backend)
-**Phase 3**: ✅ COMPLETE (Core UI Components - 6/6)
-**Phase 4**: 🔄 IN PROGRESS (Main Features - 2/4 complete)
-- 4.1 Board Page: ✅ **COMPLETE**
-- 4.2 New Job Form: ✅ **COMPLETE** (this session)
-- 4.3 Top Navigation: ⏳ **NEXT**
-- 4.4 Bottom Navigation: ⏳ TODO
-
-**Phase 5**: ⏳ TODO (Activity & Handover pages)
-**Phase 6**: ⏳ TODO (Real-Time & Polish)
-**Phase 7**: ⏳ TODO (Deploy & Test)
+### Phase 6: Navbar Menu Cleanup ✅
+**Files Modified**:
+- `app/components/Navbar.tsx` - removed teams toggle prop, compact styling
+- `app/components/UserMenu.tsx` - added Handover + Team Admin links
 
 ---
 
-## 📍 PROJECT LOCATION
+## Files Summary
 
-```
-~/Developer/workspace/prompt-improver/rigger-jobs/
-```
+**Created (6 files)**:
+- `components/DashboardHeader.tsx`
+- `components/TeamStatusModal.tsx`
+- `components/MobileStatusTabs.tsx`
+- `components/FAB.tsx`
+- `components/QuickCreateJobSheet.tsx`
 
-**Key Files**:
-- `app/dashboard/page.tsx` - **MAIN BOARD PAGE** (150 lines)
-- `components/` - All 6 UI components (827 lines total)
-- `app/test-*/` - All 6 test pages (1,596 lines total)
-- `convex/` - Backend (jobs, teams, activity, handover)
-- `lib/` - Constants, utilities, env validation
+**Modified (8 files)**:
+- `components/JobCard.tsx`
+- `components/StatusColumn.tsx`
+- `components/SkeletonJobCard.tsx`
+- `components/SkeletonStatusColumn.tsx`
+- `components/BottomNav.tsx`
+- `app/jobs/page.tsx`
+- `app/components/Navbar.tsx`
+- `app/components/UserMenu.tsx`
 
 ---
 
-## 🚫 BLOCKERS: NONE
+## Current State
 
-Board page fully integrated and working. Ready for Phase 4.2 New Job Form.
+### Uncommitted Changes
+All dashboard redesign changes uncommitted. Run:
 
----
-
-## 📖 REFERENCE COMMANDS
-
-### Verify Project State
 ```bash
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-git status                    # Should be clean
-npm run dev                   # http://localhost:3000
-npx tsc --noEmit             # TypeScript check
-```
+git status
+git add .
+git commit -m "feat: dashboard UI redesign - dense/compact mobile-first
 
-### Test Board Page
-- Visit http://localhost:3000
-- Sign in with Clerk
-- Redirects to /dashboard
-- Board shows 4 columns (empty initially)
-- Click "Today's Teams" to expand panel
-- All components integrated ✅
+Phase 1: Compact cards
+- JobCard: p-4→p-2, single-line description, smaller badges
+- StatusColumn: 320→260/280px, gap-3→gap-1.5
+- ~40% card height reduction
 
-### Start Phase 4.2
-1. Read `lib/constants.ts` for 24 area codes
-2. Create form with react-hook-form + Zod
-3. Use `createJob` mutation from `convex/jobs.ts`
-4. Add "+ New Job" button to navigation
+Phase 2: Dashboard header
+- New DashboardHeader replaces TodayTeamsPanel
+- Inline status counts + team summary
+- TeamStatusModal for full team grid
 
----
+Phase 3: Mobile tabs
+- MobileStatusTabs for status switching on mobile
+- Tab bar shows one status at a time
+- Desktop keeps horizontal Kanban
 
-## 🔄 AFTER CONTEXT RESET
+Phase 4: Simplified navigation
+- BottomNav: 4→2 tabs (Jobs, Activity)
+- FAB for new job creation
+- Handover/Admin in UserMenu dropdown
 
-1. ✅ Read this file first (SESSION-HANDOFF.md)
-2. ✅ Read `rigger-jobs-app-context.md` for full implementation details
-3. ✅ Review `rigger-jobs-app-tasks.md` for task checklist
-4. ✅ Work Nr property complete and committed (`43b4cfb`)
-5. 🚀 Start Phase 4.3: Top Navigation component
-6. ✅ Mark tasks in `rigger-jobs-app-tasks.md` as you complete them
+Phase 5: Bottom sheet form
+- QuickCreateJobSheet for quick job creation
+- Compact grouped fields
+- Optional fields collapsed
 
----
+Phase 6: Navbar cleanup
+- Removed teams toggle
+- UserMenu has Handover/Admin links
 
-## 💡 Quick Reference: Phase 4.2 New Job Form (COMPLETE)
-
-**File**: `app/jobs/new/page.tsx` (356 lines)
-**Status**: ✅ Fully implemented and working
-
-### Key Features
-- Work Nr auto-format on blur (lines 58-64)
-- Zod validation schema (lines 17-28)
-- Form submission to createJob mutation (lines 66-92)
-- Redirects to /dashboard on success
-- Min 44px touch targets throughout
-
-### Dependencies Installed
-- `@hookform/resolvers` - For Zod + react-hook-form integration
-- Fixed Zod v4 API: `message` instead of `required_error`
-
----
-
-## 💡 Quick Tips for Phase 4.3 Top Navigation
-
-### Clerk UserButton
-```typescript
-import { UserButton } from '@clerk/nextjs';
-
-<UserButton afterSignOutUrl="/" />
-```
-
-### Responsive Toggle Button
-```typescript
-// Show on mobile only
-<button className="md:hidden">
-  Today's Teams
-</button>
-```
-
-### Navigation Structure
-```typescript
-<nav className="fixed top-0 left-0 right-0 bg-background border-b z-50">
-  <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-    <div className="flex items-center gap-4">
-      <h1>Rigger Jobs</h1>
-      <button className="md:hidden">Teams</button>
-    </div>
-    <div className="flex items-center gap-3">
-      <Link href="/jobs/new">
-        <button>+ New Job</button>
-      </Link>
-      <UserButton />
-    </div>
-  </div>
-</nav>
+🤖 Generated with Claude Code"
 ```
 
 ---
 
-**PHASE 4.2 COMPLETE ✅ - NEW JOB FORM WORKING - CONTINUE WITH PHASE 4.3 TOP NAVIGATION** 🚀
+## Build Status
+```
+pnpm build ✅ PASSES
+11 routes, no TypeScript errors
+```
+
+---
+
+## Quick Commands
+
+```bash
+# Dev
+cd ~/Developer/workspace/prompt-improver/rigger-jobs
+pnpm dev              # Start dev server (http://localhost:3000)
+pnpm build            # Verify build
+npx convex dev        # Start Convex sync
+
+# Git
+git status            # Check changes
+git diff              # Review changes
+```
+
+---
+
+## Key Architecture Changes
+
+**Before**:
+- TodayTeamsPanel: collapsible section, takes vertical space
+- BottomNav: 4 tabs (Jobs, Activity, Handover, Admin)
+- JobCard: generous padding, 2-line description
+- Mobile: horizontal scroll Kanban
+
+**After**:
+- DashboardHeader: inline badges, TeamStatusModal on tap
+- BottomNav: 2 tabs + FAB
+- JobCard: compact, single-line description
+- Mobile: tab-based status switching
+
+---
+
+## Next Steps
+
+1. **Test the redesign** - run `pnpm dev` and verify mobile/desktop
+2. **Commit changes** - see commit message above
+3. **Continue Phase 7** - Deploy & Test (see tasks.md)
+
+---
+
+**End of Handoff**
