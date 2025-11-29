@@ -1,162 +1,107 @@
-# Session Handoff - Rigger Jobs App
-**Date**: 2025-11-25
-**Status**: DASHBOARD UI REDESIGN COMPLETE
+# Session Handoff - RiggOps App
+**Date**: 2025-11-27
+**Status**: ACTIVITY PAGE PLAYWRIGHT TESTS + BUG FIX COMPLETE
 
 ---
 
 ## What Was Completed This Session
 
-### Dashboard UI Redesign ✅ COMPLETE (All 6 Phases)
+### 1. Activity Page Playwright MCP Tests
 
-**Goal**: Dense/compact mobile-first dashboard with tab-based status switching, simplified navigation, and bottom sheet job creation.
+Ran comprehensive tests on Activity Timeline page using Playwright MCP tools.
 
-**Design Decisions**:
-- Quick Overview focus (glanceable, not power-user)
-- Dense/Compact style (smaller text, tight spacing)
-- Mobile-First with tabs (not horizontal scroll)
-- Bottom sheet for quick job creation
+**Test Results (9/10 PASSED)**:
+| Test | Status | Notes |
+|------|--------|-------|
+| 1. Page Load & Basic Structure | PASS | Heading, FilterPanel, events visible |
+| 2. Event Type Filter Selection | PASS | Tabs work, URL updates correctly |
+| 3. Date Picker Selection | PASS | Calendar opens, date changes |
+| 4. Team Dropdown Filter | PASS | Teams load, filter applies |
+| 5. Clear All Filters | PASS | Button appears, resets filters |
+| 6. Activity Event Cards | PASS | Icons, timestamps, Work Nr badges |
+| 7. Load More Pagination | **FAIL** | React Hooks error (FIXED BELOW) |
+| 8. Empty State | PASS | Correct empty message displays |
+| 9. Mobile Responsive | PASS | Filter panel collapse/expand works |
+| 10. Date Separator | PASS | "Today" separator visible |
 
----
-
-### Phase 1: Compact JobCard + StatusColumn ✅
-**Files Modified**:
-- `components/JobCard.tsx` - p-4→p-2, single-line description, smaller badges
-- `components/StatusColumn.tsx` - 320px→260/280px width, gap-3→gap-1.5
-- `components/SkeletonJobCard.tsx` - matching compact sizes
-- `components/SkeletonStatusColumn.tsx` - matching compact sizes
-
-**Result**: ~40% card height reduction, more jobs visible
-
----
-
-### Phase 2: Dashboard Header (Replaces Teams Panel) ✅
-**New Files**:
-- `components/DashboardHeader.tsx` - inline status counts + team summary badge
-- `components/TeamStatusModal.tsx` - modal for full team grid
-
-**Changes**:
-- Removed TodayTeamsPanel from jobs page
-- Header shows: [4 New] [3 In Progress] [1 Delayed] [5 Done] | [2 FREE / 4 BUSY]
-- Tap team badge opens TeamStatusModal
+**Screenshots saved to**: `.playwright-mcp/rigger-jobs/tests/`
+- activity-01-page-load.png
+- activity-02-event-type-created.png
+- activity-03-date-picker-open.png
+- activity-03-date-selected.png
+- activity-04-team-filter.png
+- activity-05-clear-filters.png
+- activity-07-load-more-error.png
+- activity-08-empty-state.png
+- activity-09-mobile-collapsed.png
+- activity-09-mobile-expanded.png
+- activity-10-date-separator.png
 
 ---
 
-### Phase 3: Mobile Status Tabs ✅
-**New Files**:
-- `components/MobileStatusTabs.tsx` - tab bar for mobile status switching
+### 2. Load More React Hooks Bug Fix
 
-**Changes**:
-- `app/jobs/page.tsx`:
-  - Mobile (< md): Shows tabs + single column job list
-  - Desktop (>= md): Shows horizontal Kanban columns
-- Added `mobileStatus` state, `jobCounts` memo, `getTeam` helper
+**Bug**: `useQuery` called inside `.map()` loop violated React's Rules of Hooks
+**Error**: "Should have a queue. You are likely calling Hooks conditionally"
+**Location**: `rigger-jobs/app/activity/page.tsx` lines 66-74
 
----
+**Root Cause**:
+```typescript
+// INVALID: Hooks in loop
+const additionalEvents = loadedDays.map((date) => {
+  return useQuery(api.activity.getActivityByDate, {...}); // BUG!
+});
+```
 
-### Phase 4: Simplified Bottom Navigation + FAB ✅
-**Files Modified**:
-- `components/BottomNav.tsx` - reduced from 4 tabs to 2 (Jobs, Activity)
+**Fix Applied**:
+1. Extended `startTimestamp` calculation to include all loaded days
+2. Removed buggy `additionalEvents` `.map()` with `useQuery`
+3. Simplified `allEvents` to sort single query result
+4. Removed unused `Loader2` import
+5. Simplified Load More button
 
-**New Files**:
-- `components/FAB.tsx` - floating action button for new job
+**Key Change** (lines 44-64):
+```typescript
+const { startTimestamp, endTimestamp } = useMemo(() => {
+  const end = new Date(selectedDate);
+  end.setHours(23, 59, 59, 999);
 
-**Changes**:
-- BottomNav: icon-only, smaller (48px), max-w-xs centered
-- FAB: bottom-right position, opens create job sheet
-- Handover/Admin moved to UserMenu dropdown
+  // Start is earliest loaded day, or selected day if none loaded
+  let startDate = selectedDate;
+  if (loadedDays.length > 0) {
+    startDate = loadedDays[loadedDays.length - 1];
+  }
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
 
----
+  return { startTimestamp: start.getTime(), endTimestamp: end.getTime() };
+}, [selectedDate, loadedDays]);
+```
 
-### Phase 5: Bottom Sheet Job Creation ✅
-**New Files**:
-- `components/QuickCreateJobSheet.tsx` - compact bottom sheet form
-
-**Features**:
-- Grouped fields: Requested By, Area+Location (row), Description, Priority
-- Optional fields (collapsed): Work Nr, Required By
-- "Full form" link to /jobs/new
-- Uses createJob mutation
-
----
-
-### Phase 6: Navbar Menu Cleanup ✅
-**Files Modified**:
-- `app/components/Navbar.tsx` - removed teams toggle prop, compact styling
-- `app/components/UserMenu.tsx` - added Handover + Team Admin links
+**Verified**: Load More now works - "Yesterday" events appear with proper date separator.
 
 ---
 
-## Files Summary
+## Files Modified This Session
 
-**Created (6 files)**:
-- `components/DashboardHeader.tsx`
-- `components/TeamStatusModal.tsx`
-- `components/MobileStatusTabs.tsx`
-- `components/FAB.tsx`
-- `components/QuickCreateJobSheet.tsx`
-
-**Modified (8 files)**:
-- `components/JobCard.tsx`
-- `components/StatusColumn.tsx`
-- `components/SkeletonJobCard.tsx`
-- `components/SkeletonStatusColumn.tsx`
-- `components/BottomNav.tsx`
-- `app/jobs/page.tsx`
-- `app/components/Navbar.tsx`
-- `app/components/UserMenu.tsx`
+| File | Change |
+|------|--------|
+| `rigger-jobs/app/activity/page.tsx` | Fixed Load More hooks bug, extended date range calc |
 
 ---
 
 ## Current State
 
-### Uncommitted Changes
-All dashboard redesign changes uncommitted. Run:
+### Build Status
+- Dev server running at http://localhost:3000
+- Activity page Load More works correctly
+- No TypeScript errors visible
 
-```bash
-cd ~/Developer/workspace/prompt-improver/rigger-jobs
-git status
-git add .
-git commit -m "feat: dashboard UI redesign - dense/compact mobile-first
-
-Phase 1: Compact cards
-- JobCard: p-4→p-2, single-line description, smaller badges
-- StatusColumn: 320→260/280px, gap-3→gap-1.5
-- ~40% card height reduction
-
-Phase 2: Dashboard header
-- New DashboardHeader replaces TodayTeamsPanel
-- Inline status counts + team summary
-- TeamStatusModal for full team grid
-
-Phase 3: Mobile tabs
-- MobileStatusTabs for status switching on mobile
-- Tab bar shows one status at a time
-- Desktop keeps horizontal Kanban
-
-Phase 4: Simplified navigation
-- BottomNav: 4→2 tabs (Jobs, Activity)
-- FAB for new job creation
-- Handover/Admin in UserMenu dropdown
-
-Phase 5: Bottom sheet form
-- QuickCreateJobSheet for quick job creation
-- Compact grouped fields
-- Optional fields collapsed
-
-Phase 6: Navbar cleanup
-- Removed teams toggle
-- UserMenu has Handover/Admin links
-
-🤖 Generated with Claude Code"
-```
-
----
-
-## Build Status
-```
-pnpm build ✅ PASSES
-11 routes, no TypeScript errors
-```
+### Test Coverage
+- Activity page has been manually tested with Playwright MCP
+- All filter interactions work
+- Mobile responsive works
+- Load More pagination now works
 
 ---
 
@@ -165,38 +110,36 @@ pnpm build ✅ PASSES
 ```bash
 # Dev
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-pnpm dev              # Start dev server (http://localhost:3000)
-pnpm build            # Verify build
+npm run dev           # Start dev server (http://localhost:3000)
+npm run build         # Verify build
 npx convex dev        # Start Convex sync
 
-# Git
-git status            # Check changes
-git diff              # Review changes
+# Test Activity Page
+# Navigate to http://localhost:3000/activity
+# Click "Load More" to verify fix works
 ```
 
 ---
 
-## Key Architecture Changes
+## Key Patterns Learned
 
-**Before**:
-- TodayTeamsPanel: collapsible section, takes vertical space
-- BottomNav: 4 tabs (Jobs, Activity, Handover, Admin)
-- JobCard: generous padding, 2-line description
-- Mobile: horizontal scroll Kanban
+### React Hooks Rule
+- NEVER call hooks inside loops, conditions, or nested functions
+- Hooks must be at top level of component
+- For dynamic queries, extend the single query's parameters instead of multiple queries
 
-**After**:
-- DashboardHeader: inline badges, TeamStatusModal on tap
-- BottomNav: 2 tabs + FAB
-- JobCard: compact, single-line description
-- Mobile: tab-based status switching
+### Convex Query Pattern
+- `getFilteredActivity` accepts `startTimestamp` and `endTimestamp`
+- Extend date range instead of making multiple separate queries
+- Let Convex handle the filtering on the backend
 
 ---
 
 ## Next Steps
 
-1. **Test the redesign** - run `pnpm dev` and verify mobile/desktop
-2. **Commit changes** - see commit message above
-3. **Continue Phase 7** - Deploy & Test (see tasks.md)
+1. **Run build** to verify no TypeScript errors
+2. **Test other pages** if needed
+3. **Consider** adding loading state to Load More button (optional)
 
 ---
 

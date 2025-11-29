@@ -118,16 +118,38 @@ export async function POST(request: Request) {
 
     if (incrementError) {
       console.error('Increment error:', incrementError);
-      // Don't fail the request if increment fails
+      return NextResponse.json(
+        { error: 'Failed to update usage count' },
+        { status: 500 }
+      );
+    }
+
+    // Query actual usage after increment to ensure UI shows correct count
+    const { data: updatedLimit, error: limitError } = await supabase
+      .rpc('check_generation_limit', { user_uuid: user.id })
+      .single();
+
+    if (limitError || !updatedLimit) {
+      console.error('Failed to query updated usage:', limitError);
+      // Fallback to optimistic count if query fails
+      return NextResponse.json({
+        success: true,
+        generation: generation,
+        usage: {
+          current: limitData.current_count + 1,
+          limit: limitData.limit_count,
+          plan: limitData.plan_name
+        }
+      });
     }
 
     return NextResponse.json({
       success: true,
       generation: generation,
       usage: {
-        current: limitData.current_count + 1,
-        limit: limitData.limit_count,
-        plan: limitData.plan_name
+        current: updatedLimit.current_count,
+        limit: updatedLimit.limit_count,
+        plan: updatedLimit.plan_name
       }
     });
 
