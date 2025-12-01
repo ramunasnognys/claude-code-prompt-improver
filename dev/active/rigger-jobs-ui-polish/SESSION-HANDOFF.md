@@ -1,109 +1,87 @@
 # Rigger Jobs UI Polish - Session Handoff
 
-**Last Updated**: 2025-11-26T12:45:00Z
+**Last Updated**: 2025-12-01 (Sign-In Page Redesign Session)
 **Branch**: main
 **Working Directory**: `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs`
+**Status**: ✅ ALL COMMITTED
 
-## Session Summary
+---
 
-This session focused on UI improvements to the Create New Job form for desktop users.
+## Quick Resume Command
 
-## Completed Changes
-
-### 1. Compact Form Layout (Desktop) - COMMITTED
-**Commit**: `546a306` - fix: compact Create New Job form layout for desktop
-
-**Files Modified**:
-- `app/jobs/new/page.tsx` - form layout
-- `components/ui/form-section.tsx` - card padding
-
-**Changes**:
-- Increased form width: `max-w-2xl` → `max-w-4xl` on desktop
-- Reduced spacing: `space-y-5` → `md:space-y-3` between sections
-- Reduced container padding: `md:py-8` → `md:py-4`
-- Reduced FormSection padding: `p-5` → `md:p-4`
-- Put Priority & Required By on same row (desktop)
-- All fields + buttons now visible without scrolling on desktop
-
-### 2. Work Nr Input Refactor - NOT YET COMMITTED
-**Goal**: Static "RF-" prefix, user only types 4 digits
-
-**Files Modified**:
-- `lib/constants.ts` - Added `WORK_NR_PREFIX = "RF-"`, simplified formatWorkNr
-- `app/jobs/new/page.tsx` - New prefixed input UI, digits-only handler
-- `components/QuickCreateJobSheet.tsx` - Same changes for quick create
-
-**Implementation Details**:
-- Static "RF-" prefix displayed as styled span before input
-- Input uses `inputMode="numeric"` and `maxLength={4}`
-- onChange handler filters non-digits: `e.target.value.replace(/\D/g, '').slice(0, 4)`
-- On submit, prepends "RF-" prefix: `RF-${digits.padStart(4, '0')}`
-- Validation schema changed to accept 1-4 digits only
-
-**Key Code Pattern** (used in both forms):
-```tsx
-// Handler
-const handleWorkNrChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-  setValue('workNr', value);
-};
-
-// UI
-<div className="flex">
-  <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 bg-muted text-muted-foreground">
-    RF-
-  </span>
-  <input
-    inputMode="numeric"
-    maxLength={4}
-    placeholder="0000"
-    {...register('workNr')}
-    onChange={handleWorkNrChange}
-    className="rounded-l-none"
-  />
-</div>
-
-// Submit
-const formattedWorkNr = data.workNr?.trim()
-  ? `${WORK_NR_PREFIX}${data.workNr.trim().padStart(4, '0')}`
-  : undefined;
 ```
-
-## Uncommitted Changes
-
-Run `git status` in rigger-jobs directory to see:
-- `lib/constants.ts` - WORK_NR_PREFIX changes
-- `app/jobs/new/page.tsx` - Work Nr input changes
-- `components/QuickCreateJobSheet.tsx` - Work Nr input changes
-
-**To commit**:
-```bash
 cd /Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs
-git add -A
-git commit -m "feat: Work Nr input with static RF- prefix, digits only"
+npm run dev  # Start dev server on port 3000
 ```
 
-## Dev Server
+---
 
-Running: `pnpm dev` on port 3000
-Background process ID: 8c4a02
+## Current Session Summary (2025-12-01)
 
-## Next Steps (if continuing)
+### Sign-In/Sign-Up Page Redesign - ✅ COMPLETED
 
-1. Commit the Work Nr changes
-2. Test quick create sheet (click "New Job" button in sidebar)
-3. Consider similar improvements to job edit form (if exists)
-4. Optional: Add visual feedback when max digits reached
+**Goal**: Improve unprofessional-looking sign-in page
 
-## Files to Read on Resume
+**Commit**: `607ed5b` - `style: redesign sign-in/sign-up pages for professional look`
 
-1. `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs/app/jobs/new/page.tsx` - Main create form
-2. `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs/components/QuickCreateJobSheet.tsx` - Quick create
-3. `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs/lib/constants.ts` - Work Nr constants
+**Changes Made**:
+
+1. **Sign-In Page** (`app/sign-in/[[...sign-in]]/page.tsx`)
+   - Light gray background (`bg-gray-50`)
+   - Branded header: HardHat icon in dark square + "RiggOps" title + tagline
+   - Clerk `appearance` prop for light theme styling
+   - Mobile-responsive centered layout
+
+2. **Sign-Up Page** (`app/sign-up/[[...sign-up]]/page.tsx`)
+   - Same design as sign-in for consistency
+
+3. **CSS Overrides** (`app/globals.css`)
+   - Sign-in/sign-up specific styles (scoped with `.cl-signIn-root`, `.cl-signUp-root`)
+   - White card with shadow and border
+   - Dark (#111827) primary button
+   - Hidden Clerk default headers (using custom branding)
+   - UserProfile styles kept separate (transparent for embedded use)
+
+**Key CSS Pattern**:
+```css
+/* Sign-in specific - white card with shadow */
+.cl-signIn-root .cl-card { background: white; box-shadow: ...; }
+
+/* UserProfile - transparent for embedded */
+.cl-userProfile-root .cl-card { background: transparent; }
+```
+
+---
+
+## Files Modified This Session
+
+| File | Change | Committed |
+|------|--------|-----------|
+| `app/sign-in/[[...sign-in]]/page.tsx` | Full redesign with branding | ✅ 607ed5b |
+| `app/sign-up/[[...sign-up]]/page.tsx` | Full redesign with branding | ✅ 607ed5b |
+| `app/globals.css` | Sign-in/sign-up Clerk CSS overrides | ✅ 607ed5b |
+
+---
+
+## Previous Session Work (Reference)
+
+### Toast Simplification - ✅ COMPLETED
+- Badge styling for job numbers in toasts (committed: `57f96db`)
+- Local toasts for user's own actions
+- Real-time toasts for other users' actions
+
+### Work Nr Input Refactor - ✅ COMPLETED
+- Static "RF-" prefix, user only types 4 digits
+
+### Teams Page Layout - ✅ COMPLETED
+- Aligned with Dashboard design system (committed: `f9d6373`)
+
+---
 
 ## Architecture Notes
 
-- Forms use react-hook-form with Zod validation
-- Convex for backend (mutations in `convex/jobs.ts`)
-- Work Nr stored in DB as full format "RF-XXXX"
-- Display throughout app shows full format from DB (no changes needed elsewhere)
+### Clerk Theming Strategy
+- Use CSS overrides scoped by root class (`.cl-signIn-root`, `.cl-userProfile-root`)
+- Sign-in/sign-up: Light theme, white card, dark buttons
+- UserProfile: Transparent/embedded, matches app theme
+- Avoid global `.cl-card` overrides - scope by parent component
