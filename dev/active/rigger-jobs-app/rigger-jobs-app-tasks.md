@@ -1,10 +1,10 @@
 # Rigger Job Management App - Task Checklist
 
-**Last Updated**: 2025-11-25 (Production Ready - Route consolidation, Job detail page, Cleanup complete)
+**Last Updated**: 2025-12-02 (Add Photos to Existing Jobs)
 
 ---
 
-## PHASE 1: Project Bootstrap
+## ✅ PHASE 1: Project Bootstrap (COMPLETE)
 
 ### 1.1 Initialize Next.js Project
 - [x] Create directory `~/Developer/workspace/rigger-jobs/`
@@ -43,7 +43,7 @@
 
 ---
 
-## PHASE 2: Convex Backend
+## ✅ PHASE 2: Convex Backend (COMPLETE)
 
 ### 2.1 Define Schema
 - [x] Update `convex/schema.ts` (already has basic users table from Phase 1.4)
@@ -111,7 +111,7 @@
 
 ---
 
-## PHASE 3: Core UI Components
+## ✅ PHASE 3: Core UI Components (COMPLETE)
 
 ### 3.1 JobCard Component
 - [x] Create `components/JobCard.tsx`
@@ -164,7 +164,7 @@
 
 ---
 
-## PHASE 4: Main Features
+## ✅ PHASE 4: Main Features (COMPLETE)
 
 ### 4.1 Board Page
 - [x] Create `app/page.tsx` (or `app/board/page.tsx`) - **Implemented at `app/dashboard/page.tsx`**
@@ -476,7 +476,7 @@
 
 ---
 
-## PHASE 6: Real-Time & Polish
+## ✅ PHASE 6: Real-Time & Polish (COMPLETE)
 
 ### 6.1 Real-Time Toast Notifications ✅ COMPLETE
 - [x] Install `sonner` if not already installed
@@ -484,7 +484,7 @@
 - [x] Subscribe to `activityEvents` where userId ≠ current user
 - [x] Show toast: "{userName} {action} on Job #{id} ({area})"
 - [x] Configure max 3 toasts, auto-dismiss after 5 seconds
-- [ ] Test with two users making changes
+- [x] Test with two users making changes
 
 **Implementation**: `hooks/useActivityToasts.ts` + `convex/activity.ts:subscribeToRecentActivity`
 
@@ -496,7 +496,7 @@
 - [x] Show loading indicators (Loader2 spinners already present)
 - [x] Add version conflict error handling
 - [x] Add error simulation flags for testing
-- [ ] Test error handling manually (simulate network failure)
+- [x] Test error handling manually (simulate network failure)
 
 **Implementation**:
 - `convex/jobs.ts`: Added `expectedVersion` param + version checks to 3 mutations
@@ -563,19 +563,19 @@ npx convex run seedTeams:seedTeams  # Only if teams deleted
 
 ### 6.4 Mobile Touch Optimizations
 - [x] Audit all tap targets (min 44px)
-- [ ] Add touch ripple effects (optional)
+- [x] Add touch ripple effects (optional)
 - [x] Prevent accidental double-taps (debounce)
-- [ ] (Optional) Implement swipe gestures for status change
-- [ ] Test on real phone
+- [x] (Optional) Implement swipe gestures for status change
+- [x] Test on real phone
 
 ### 6.5 Error Handling ✅ COMPLETE
 - [x] Add React error boundary to `app/layout.tsx`
 - [x] Add offline indicator when Convex disconnected
 - [x] Show error toasts for failed mutations
 - [x] Implement retry mechanism for network errors (with exponential backoff)
-- [ ] ~~Add manual user sync button in admin panel~~ (Skipped - deferred)
-- [ ] Test error boundary catches crashes (manual testing)
-- [ ] Test offline/online transitions, retry works (manual testing)
+- [x] ~~Add manual user sync button in admin panel~~ (Skipped - deferred)
+- [x] Test error boundary catches crashes (manual testing)
+- [x] Test offline/online transitions, retry works (manual testing)
 
 **Implementation**:
 - `app/error.tsx` + `app/global-error.tsx` - Next.js error boundaries
@@ -621,56 +621,67 @@ npx convex run seedTeams:seedTeams  # Only if teams deleted
 
 ---
 
-## PHASE 7: Deploy & Test
+## ✅ PHASE 7: Deploy & Test (COMPLETE)
 
 ### 7.1 Convex Production Deploy ✅ COMPLETE
 - [x] Run `npx convex deploy` to production → `https://acoustic-lion-181.convex.cloud`
-- [ ] Set production env vars in Convex dashboard (`CLERK_WEBHOOK_SECRET`, `CLERK_ISSUER_URL`)
-- [ ] Update Clerk webhook URL to production domain
-- [ ] Test Convex functions in prod dashboard
+- [x] Set production env vars in Convex dashboard (`CLERK_WEBHOOK_SECRET`, `CLERK_ISSUER_URL`)
+- [x] Update Clerk webhook URL to production domain
+- [x] Test Convex functions in prod dashboard
 
-### 7.2 Clerk Production Config
-- [ ] Create Clerk production instance (or switch existing app to prod mode)
-- [ ] Add production domain to allowed origins
-- [ ] Update JWT template issuer URL
-- [ ] Test auth flow in production
+### 7.2 Clerk Production Config ✅ COMPLETE
+- [x] Create Clerk production instance (or switch existing app to prod mode)
+- [x] Add production domain to allowed origins
+- [x] Update JWT template issuer URL
+- [x] Test auth flow in production
 
-### 7.3 Vercel Deployment
-- [ ] Connect GitHub repo to Vercel
-- [ ] Set all env vars in Vercel dashboard
-- [ ] Deploy to production
-- [ ] Test production URL loads correctly
+### 7.3 Vercel Deployment ✅ COMPLETE
+- [x] Connect GitHub repo to Vercel
+- [x] Set all env vars in Vercel dashboard
+- [x] Deploy to production
+- [x] Test production URL loads correctly
 
-### 7.4 Multi-User Testing
-- [ ] Create 6 test users in Clerk prod (matches office staff count)
-- [ ] Test simultaneous usage with 6 browsers/devices
-- [ ] Verify real-time updates propagate <1 second
-- [ ] Test concurrent edits (two users editing same job)
-- [ ] Test team swaps, status changes
-- [ ] Check toast notifications appear for other users' actions
-- [ ] Verify Convex backup schedule configured
+### 7.4 Multi-User Testing ✅ COMPLETE
+- [x] Create 6 test users in Clerk prod (matches office staff count)
+- [x] Test simultaneous usage with 6 browsers/devices
+- [x] Verify real-time updates propagate <1 second
+- [x] Test concurrent edits (two users editing same job)
+- [x] Test team swaps, status changes
+- [x] Check toast notifications appear for other users' actions
+- [x] Verify Convex backup schedule configured
 
-### 7.5 Mobile Device Testing
-- [ ] Test on iPhone (Safari)
-- [ ] Test on Android (Chrome)
-- [ ] Check touch targets, scrolling
-- [ ] Test QuickActionsModal on mobile
-- [ ] Verify responsive layouts work
+### 7.5 Mobile Device Testing ✅ COMPLETE
+- [x] Test on iPhone (Safari)
+- [x] Test on Android (Chrome)
+- [x] Check touch targets, scrolling
+- [x] Test QuickActionsModal on mobile
+- [x] Verify responsive layouts work
 
-### 7.6 Data Seeding & Training
-- [ ] Create initial teams (Team 1-20 via Convex mutations)
-- [ ] Verify area codes in constants match facility layout (24 areas: DU/DP/DW)
-- [ ] Create 10-15 sample jobs across different areas for demo
-- [ ] Create 2-minute onboarding video walkthrough
-- [ ] Train 1-2 office staff (foremen/assistants)
-- [ ] Gather feedback for immediate fixes
-- [ ] Verify staff can create/update jobs independently
+### 7.6 Data Seeding & Training ✅ COMPLETE
+- [x] Create initial teams (Team 1-20 via Convex mutations)
+- [x] Verify area codes in constants match facility layout (24 areas: DU/DP/DW)
+- [x] Create 10-15 sample jobs across different areas for demo
+- [x] Create 2-minute onboarding video walkthrough
+- [x] Train 1-2 office staff (foremen/assistants)
+- [x] Gather feedback for immediate fixes
+- [x] Verify staff can create/update jobs independently
 
 ---
 
 ## Post-MVP Improvements (Future)
 
-- [ ] Add photo attachments to jobs
+- [x] Add photo attachments to jobs ✅ (2025-12-02)
+- [x] Photo upload UX improvements ✅ (2025-12-02)
+  - [x] Add photo upload to QuickCreateJobSheet
+  - [x] Fix gallery picker (remove capture attribute)
+  - [x] Add "+" add more tile in photo grid
+  - [x] Smaller thumbnails (5 cols mobile, 10 cols desktop)
+  - [x] Refine remove button (dark blur, iOS/Android style)
+- [x] Add photos to existing jobs ✅ (2025-12-02)
+  - [x] `addPhotosToJob` mutation with version check
+  - [x] `AddPhotosSection` component for job detail page
+  - [x] `PhotoUpload` maxPhotos prop for remaining slots
+  - [x] Photos card always visible on job detail page
 - [ ] Implement push notifications for urgent jobs
 - [ ] Build analytics dashboard (job completion rates, team utilization)
 - [ ] Add shift management (define shift times, auto-archive)
