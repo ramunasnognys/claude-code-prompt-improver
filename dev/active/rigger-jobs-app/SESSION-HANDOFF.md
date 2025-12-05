@@ -1,112 +1,78 @@
 # Session Handoff - RiggOps App
-**Date**: 2025-12-02
-**Status**: ADD PHOTOS TO EXISTING JOBS COMPLETE
+**Last Updated**: 2025-12-05 (Pre-Context Reset)
+**Status**: PRODUCTION + RIGGER ROLE IN PROGRESS
+**Branch**: `matt/rigger-my-jobs-feature`
+**Working Dir**: `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs`
 
 ---
 
 ## Quick Summary
 
-This session implemented ability to add photos to existing jobs:
+RiggOps is production-ready mobile-first job tracking. Currently implementing rigger role feature.
 
-1. **addPhotosToJob mutation** - Version-checked mutation, max 5 photos total
-2. **AddPhotosSection component** - Upload UI for job detail page
-3. **PhotoUpload maxPhotos prop** - Limits slots based on existing photos
-4. **Photos card always visible** - Shows add UI when < 5 photos
+**Core Features Complete**:
+1. ✅ Job management (Create, view, update status, assign teams)
+2. ✅ Kanban board with 4 status columns
+3. ✅ Activity timeline with filtering
+4. ✅ Daily handover summaries
+5. ✅ Team management
+6. ✅ Photo uploads (up to 5 per job)
+7. ✅ Real-time updates (Convex subscriptions)
+8. ✅ Mobile-responsive navigation
+9. ✅ Offline handling
+10. ✅ Professional sign-in/sign-up pages
 
-**Latest Commit**: `2c2066d` on `main` branch
-**Build**: Passes (11 routes)
-
----
-
-## Commits This Session
-
-| Commit | Description |
-|--------|-------------|
-| `2c2066d` | feat: add photos to existing jobs |
+**Current Work**: Rigger Role Implementation (Phase 1.0 Critical Fixes next)
 
 ---
 
-## Files Modified This Session
+## CURRENT STATE (2025-12-05)
 
-| File | Change |
-|------|--------|
-| `convex/jobs.ts` | Added `addPhotosToJob` mutation |
-| `components/PhotoUpload.tsx` | Added `maxPhotos` prop |
-| `components/AddPhotosSection.tsx` | NEW - upload UI for existing jobs |
-| `app/jobs/[id]/page.tsx` | Photos card always visible, add UI when < 5 |
+### Git Status
+```
+Parent repo (prompt-improver):
+  - Branch: matt/rigger-my-jobs-feature
+  - Modified: dev docs (need commit)
 
----
-
-## Key Technical Decisions
-
-1. **Version checking**: Uses `expectedVersion` param like other mutations
-2. **Photo limit**: Server-side check `totalPhotos > 5` throws error
-3. **Activity logging**: Creates `photos_added` event with count
-4. **UI placement**: Photos card always visible, add section conditionally shown
-
----
-
-## addPhotosToJob Mutation
-
-```typescript
-export const addPhotosToJob = mutation({
-  args: {
-    jobId: v.id("jobRequests"),
-    photoIds: v.array(v.id("_storage")),
-    expectedVersion: v.number(),
-  },
-  handler: async (ctx, args) => {
-    // Auth + user lookup
-    // Version check
-    // Photo limit check: existingPhotos.length + newPhotos.length <= 5
-    // Merge photoIds array
-    // Patch job with new version
-    // Create activity event
-  },
-});
+Submodule (rigger-jobs):
+  - Untracked: CLAUDE.md (can delete)
+  - Last commit: 1ed6d36 (bootstrap workflow files)
 ```
 
----
-
-## AddPhotosSection Component
-
-```typescript
-interface AddPhotosSectionProps {
-  jobId: Id<"jobRequests">;
-  existingCount: number;
-  expectedVersion: number;
-}
-```
-
-Features:
-- Uses `PhotoUpload` with `maxPhotos={remainingSlots}`
-- Uploads photos to storage before calling mutation
-- Shows upload button only when photos selected
-- Toast on success, error handling
+**No uncommitted work-in-progress.** Ready to continue.
 
 ---
 
-## PhotoUpload maxPhotos Prop
+## Rigger Role Implementation Status
 
-```typescript
-interface PhotoUploadProps {
-  value: PhotoFile[];
-  onChange: (files: PhotoFile[]) => void;
-  disabled?: boolean;
-  error?: string;
-  maxPhotos?: number;  // NEW - defaults to 5
-}
-```
+**Detailed docs**: `dev/active/rigger-role-implementation/`
 
-Uses `maxAllowed = maxPhotos ?? MAX_PHOTOS` throughout component.
+### Phase 1.0: Critical Fixes ⏳ NEXT
+Plan review identified 4 critical issues to fix first:
+- [ ] Create `convex/lib/auth.ts` - JWT-based role helpers
+- [ ] Update `convex/users.ts` - sync role from JWT
+- [ ] Configure Clerk JWT + verification test
+- [ ] Backfill existing users to role="office"
 
----
+### Phase 1.1: Schema & Types ✅ COMMITTED
+- [x] Schema: role + teamId on users (commit `0e46f58`)
+- [x] Types: types/roles.ts
+- [x] Docs: my-jobs-feature.md
+- [x] Plan review completed
 
-## Current State
+### Phase 1.2-1.4: Not Started
+- [ ] Server role helpers (`lib/roles.ts`)
+- [ ] Client hook (`hooks/useRole.ts`)
+- [ ] Middleware routing
 
-- All work committed and pushed to origin/main
-- Build passes with 11 routes
-- Ready for production deploy
+### Phase 1.5: QR Code Invitation
+- [ ] Install qrcode.react + nanoid
+- [ ] Create invitations table + mutations
+- [ ] Create InviteRiggerDialog
+- [ ] Create /invite/[token] page
+
+### Phase 2-4: Not Started
+See `rigger-role-implementation-tasks.md`
 
 ---
 
@@ -114,32 +80,99 @@ Uses `maxAllowed = maxPhotos ?? MAX_PHOTOS` throughout component.
 
 ```bash
 cd ~/Developer/workspace/prompt-improver/rigger-jobs
-git status                    # Should be clean
-npx convex deploy            # Deploy Convex to production
-vercel --prod                # Deploy frontend to production
+
+# Development
+npm run dev                    # Start dev server (localhost:3000)
+npx convex dev                 # Convex dev dashboard
+
+# Git status
+git status
+
+# After Phase 1.0, install deps
+npm install qrcode.react nanoid
 ```
 
 ---
 
-## Test Checklist
+## Architecture: Rigger Role
 
-- [ ] Job with 0 photos: Can add up to 5
-- [ ] Job with 3 photos: Can add up to 2
-- [ ] Job with 5 photos: No "Add" section shown
-- [ ] Photos appear after upload (real-time)
-- [ ] Activity event logged
-- [ ] Error if exceeding 5 photos
+### Three-Layer Security:
+1. **Middleware** - Route redirects based on role
+2. **Layout** - Server-side role checks
+3. **Convex** - Data filtering + mutation protection
+
+### Role Hierarchy:
+```
+admin
+  └─ Full access + user management
+office (default for existing users)
+  └─ Full job CRUD, no user management
+rigger
+  └─ View/update assigned team jobs only
+```
+
+### Team Assignment Model:
+- Jobs → Teams (existing)
+- Riggers → Teams (NEW: teamId field on users)
+- Riggers see only jobs assigned to their team
 
 ---
 
-## Remaining Post-MVP Features
+## Critical Fixes Required (Plan Review)
 
-- [ ] Push notifications for urgent jobs
-- [ ] Analytics dashboard
-- [ ] Shift management
-- [ ] Multi-language (Norwegian + English)
-- [ ] CSV/PDF export
+| Issue | Problem | Fix |
+|-------|---------|-----|
+| **Role Sync Gap** | Convex vs Clerk roles drift | Read from JWT only |
+| **JWT Config** | No verification | Add test query |
+| **User Migration** | No role on existing users | Backfill to "office" |
+| **Schema Mismatch** | Plan vs code differ | Use team-based model |
 
 ---
 
-**End of Handoff**
+## Key Files Reference
+
+**In rigger-jobs submodule**:
+- `convex/schema.ts` - role + teamId on users
+- `types/roles.ts` - Role types and route config
+- `docs/my-jobs-feature.md` - Full implementation guide
+
+**To Create**:
+- `convex/lib/auth.ts` - JWT-based auth helpers
+- `lib/roles.ts` - Server helpers
+- `hooks/useRole.ts` - Client hook
+- `app/(rigger)/` - Rigger route group
+
+**To Modify**:
+- `middleware.ts` - Add role-based routing
+- `convex/users.ts` - Sync role from JWT
+- `convex/jobs.ts` - Role-based filtering
+- `components/AuthenticatedLayout.tsx` - Role check
+
+---
+
+## Next Steps (Resume Here)
+
+1. **Start Phase 1.0 Critical Fixes**:
+   - Create `convex/lib/auth.ts`
+   - Update `convex/users.ts` store mutation
+
+2. **Configure Clerk JWT** (requires Clerk Dashboard):
+   - Sessions → Customize session token
+   - Add `{"metadata": "{{user.public_metadata}}"}`
+
+3. **Verify JWT works** with debug query
+
+4. **Backfill existing users** to role="office"
+
+---
+
+## Build Status
+
+**Build**: ✅ Passes (11 routes, 2.3s compile)
+**Dev Server**: Port 3000
+**Database**: Convex (deployed)
+**Auth**: Clerk (configured)
+
+---
+
+**End of Handoff - Continue with Phase 1.0 Critical Fixes**
