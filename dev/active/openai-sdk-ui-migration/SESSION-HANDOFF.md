@@ -1,14 +1,15 @@
 # Session Handoff - OpenAI SDK UI Migration
 
-**Last Updated**: 2025-11-27 (Session 6 - Phase 7.4 Complete)
-**Current Phase**: Phase 7 in progress, 7.1-7.4 complete
+**Last Updated**: 2025-12-04 (Context Reset - Pre-PR Creation)
+**Current Phase**: Phase 7.7 - PR Creation Ready
+**Branch**: `matt/openai-sdk-ui-migration` (ready to push)
 
 ---
 
 ## Quick Resume Command
 
 ```
-"Continue OpenAI SDK UI Migration - Phase 7. Read dev/active/openai-sdk-ui-migration/openai-sdk-ui-migration-tasks.md for task list. Phase 7.1-7.4 complete. Proceed to Phase 7.5: Create Migration Guide, then 7.6 Update README, then 7.7 Create PR."
+Create PR for OpenAI SDK UI migration. Branch matt/openai-sdk-ui-migration. All phases 1-7.6 complete. Include Lighthouse results, device test screenshots, migration guide. Read dev/active/openai-sdk-ui-migration/SESSION-HANDOFF.md for full context.
 ```
 
 ---
@@ -28,9 +29,9 @@
 | 7.2 Device Testing | ✅ | Viewport simulation complete |
 | 7.3 Offline Mode | ✅ | Code review verified |
 | 7.4 Bundle Size | ✅ | 2.0MB total, documented |
-| 7.5 Migration Guide | ⏳ | NEXT: Create docs |
-| 7.6 README Update | ⏳ | Pending |
-| 7.7 Create PR | ⏳ | Pending |
+| 7.5 Migration Guide | ✅ | docs/MIGRATION_GUIDE_OPENAI_SDK_UI.md created |
+| 7.6 README Update | ✅ | README.md updated with design system info |
+| 7.7 Create PR | ⏳ | **NEXT: Create PR** |
 
 ### Build Status
 ```bash
@@ -39,7 +40,39 @@ cd rigger-jobs && pnpm build  # PASSES - 2.3s compile
 
 ---
 
-## Phase 7 Session Work (Today)
+---
+
+## Critical Files for PR Creation
+
+**Screenshots to Include** (all in `.playwright-mcp/`):
+- Lighthouse: lighthouse-dashboard.json, lighthouse-jobs.json, etc.
+- Device tests: device-test-mobile-390px.png, device-test-tablet-768px.png, device-test-desktop-1440px.png
+- Dark mode: dark-mode-dashboard.png, mobile-dark-mode.png
+- Focus rings: focus-ring-test.png, focus-ring-nav.png
+- Jobs page: device-test-jobs-mobile.png, device-test-jobs-mobile-delayed.png
+
+**Documentation to Reference**:
+- Migration guide: `rigger-jobs/docs/MIGRATION_GUIDE_OPENAI_SDK_UI.md`
+- Design tokens: `rigger-jobs/docs/DESIGN_TOKENS_MAPPING.md`
+- README updated: `rigger-jobs/README.md`
+
+**Commands for PR Creation**:
+```bash
+cd /Users/ramunasnognys/Developer/workspace/prompt-improver
+git checkout matt/openai-sdk-ui-migration  # Branch exists
+git status  # Verify uncommitted changes (SESSION-HANDOFF.md)
+git add .
+git commit -m "docs: update session handoff for context reset"
+git push origin matt/openai-sdk-ui-migration
+gh pr create --title "Migrate UI to OpenAI Apps SDK UI design system" --body "$(cat <<'EOF'
+[PR body - see 7.7 task for full template]
+EOF
+)"
+```
+
+---
+
+## Phase 7 Session Work (Previous Sessions)
 
 ### 7.1 Lighthouse Audit Results
 | Page | Perf | A11y | Best Practices | SEO |
@@ -78,27 +111,17 @@ Screenshots saved:
 
 ---
 
-## Remaining Tasks (Phase 7.5-7.7)
-
-### 7.5 Create Migration Guide
-Create `rigger-jobs/docs/MIGRATION_GUIDE_OPENAI_SDK_UI.md`:
-- Overview (shadcn/ui → OpenAI Apps SDK UI)
-- Component mapping table
-- Icon substitutions
-- Color token mapping reference
-- Code examples
-
-### 7.6 Update README
-Add to `rigger-jobs/README.md`:
-- Design System section
-- Apps SDK UI reference
-- Accessibility notes
+## Remaining Task (Phase 7.7 Only)
 
 ### 7.7 Create PR
 - Branch: `matt/openai-sdk-ui-migration`
 - Include all screenshots
 - Lighthouse results summary
 - Testing notes
+
+**Completed This Session (7.5-7.6)**:
+- ✅ Migration guide: `rigger-jobs/docs/MIGRATION_GUIDE_OPENAI_SDK_UI.md`
+- ✅ README updated with design system, deployment, accessibility sections
 
 ---
 
