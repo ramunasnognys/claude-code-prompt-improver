@@ -1,87 +1,137 @@
 # Rigger Role Implementation - Context
 
-**Last Updated**: 2025-12-06 05:50 UTC
-**Status**: jwt-auth-foundation VERIFIED PASSING
+**Last Updated**: 2025-12-06 08:45 UTC
+**Status**: Phase 3 COMPLETE - Rigger mobile interface done
 **Branch**: `main` (rigger-jobs submodule)
 **Working Directory**: `/Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs`
-**Latest Commit**: `cda5a71` - chore: update Clerk domain to humble-magpie-34
 
-## Session Summary (2025-12-06 - Latest Session)
+---
+
+## Session Summary (2025-12-06 - Current Session)
 
 ### What Was Completed This Session
 
-**JWT Auth Foundation - VERIFIED PASSING**
+**Phase 3: Rigger Mobile Interface - COMPLETE**
 
-1. **JWT Template Configuration** - User configured in Clerk Dashboard
-   - Added claim: `"metadata": "{{user.public_metadata}}"`
-   - JWT now correctly exposes publicMetadata
+1. **Rigger Components** (`components/rigger/`):
+   - `RiggerBottomNav.tsx` - 2-item nav (My Jobs, Profile), 64px touch areas
+   - `TeamBanner.tsx` - Team name, member count, active jobs
+   - `RiggerStatusTabs.tsx` - 3 tabs: TO DO | IN PROGRESS | DELAYED
+   - `RiggerJobCard.tsx` - Action buttons (START/COMPLETE)
 
-2. **Clerk Domain Update**
-   - Changed from `helping-pigeon-78.clerk.accounts.dev` to `humble-magpie-34.clerk.accounts.dev`
-   - Updated `convex/auth.config.ts`
+2. **Rigger Pages**:
+   - `app/my-jobs/page.tsx` - Job list with status filtering, empty states
+   - `app/my-jobs/[id]/page.tsx` - Job detail with sticky action button
+   - `app/profile/page.tsx` - Role-based views (rigger vs office)
 
-3. **Debug Verification** - All checks passing at `/debug`:
-   - ✅ JWT contains metadata.role: `office`
-   - ✅ Convex user has role: `office`
-   - ✅ JWT role matches Convex role
+3. **Layout Integration**:
+   - `AuthenticatedLayout.tsx` - Conditional layout for riggers (no sidebar)
+   - `convex/users.ts` - Added `getCurrentUserWithTeam` query
 
-4. **Created `/api/set-role` endpoint** - `app/api/set-role/route.ts`
-   - Sets current user's publicMetadata.role to "office"
-   - Used for backfilling existing users
+4. **Edge Case Fix**:
+   - `convex/jobs.ts` - Rigger without team sees empty list (not error)
 
 ### Files Modified/Created This Session
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `app/api/set-role/route.ts` | NEW | API to set user role in Clerk |
-| `app/debug/page.tsx` | NEW | Debug page for JWT verification |
-| `convex/debug.ts` | NEW | Debug query for JWT claims |
-| `convex/auth.config.ts` | MODIFIED | Updated Clerk domain |
-| `features.json` | MODIFIED | Updated feature statuses |
-| `progress.md` | MODIFIED | Session documentation |
+| `components/rigger/RiggerBottomNav.tsx` | NEW | 2-item bottom nav |
+| `components/rigger/TeamBanner.tsx` | NEW | Team info display |
+| `components/rigger/RiggerStatusTabs.tsx` | NEW | Status filter tabs |
+| `components/rigger/RiggerJobCard.tsx` | NEW | Action-focused job card |
+| `app/my-jobs/page.tsx` | NEW | Rigger job list page |
+| `app/my-jobs/[id]/page.tsx` | NEW | Rigger job detail page |
+| `app/profile/page.tsx` | MODIFIED | Added rigger profile view |
+| `components/AuthenticatedLayout.tsx` | MODIFIED | Conditional rigger layout |
+| `convex/users.ts` | MODIFIED | Added getCurrentUserWithTeam |
+| `convex/jobs.ts` | MODIFIED | Fixed rigger no-team edge case |
+
+---
 
 ## Git Status
 
-**All changes committed and pushed:**
+**Commits in rigger-jobs submodule (ahead of origin by 7):**
 ```
-cda5a71 chore: update Clerk domain to humble-magpie-34
-f061ef0 feat: jwt-auth-foundation verified passing
-3a6d47f feat: add set-role API + update features.json status
-92cfd15 feat: add QR code invitation system for riggers
+0a9f5d3 chore: update project state files
+370a6b4 fix: handle rigger without team in job queries
+24d8d4e feat(rigger): add rigger mobile interface
+90bd326 feat: block team deletion if riggers assigned
+ba2d61c feat: add role-based authorization to job mutations
+d3d0fb4 feat: add role-based filtering to job queries
+[earlier commits...]
 ```
 
-## Feature Status Summary
+**Commits in parent repo:**
+```
+9f1e57e docs: update rigger tasks - Phase 3 complete
+```
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| jwt-auth-foundation | ✅ passing | JWT template configured, verified |
-| existing-users-backfill | ✅ passing | /api/set-role works |
-| role-helpers-middleware | ✅ passing | All helpers exist |
-| qr-invitation-system | in_progress | Code complete, needs e2e test |
-| convex-authorization | not_started | Next priority |
-| rigger-mobile-navigation | not_started | After authorization |
+---
 
 ## Key Decisions Made This Session
 
 | Decision | Rationale |
 |----------|-----------|
-| Created /api/set-role endpoint | Simpler than Clerk admin scripts |
-| Kept debug files for now | Still useful for verification |
-| Changed Clerk domain | User switched to different Clerk instance |
+| No "done" tab for riggers | User decided riggers focus on active work only |
+| Simpler profile for riggers | Team info + stats instead of full Clerk UI |
+| Action buttons on cards | START + DETAILS for new; full-width COMPLETE for in_progress |
+| Rigger layout = mobile-only | No sidebar, just MobileHeader + RiggerBottomNav |
+
+---
+
+## Feature Status Summary
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| jwt-auth-foundation | ✅ passing | JWT template configured |
+| existing-users-backfill | ✅ passing | /api/set-role works |
+| role-helpers-middleware | ✅ passing | All helpers exist |
+| qr-invitation-system | ✅ passing | Needs e2e test |
+| convex-authorization | ✅ passing | Role filtering complete |
+| rigger-mobile-navigation | ✅ passing | Phase 3 complete |
+| rigger-job-card | ✅ passing | Action buttons work |
+| rigger-my-jobs-page | ✅ passing | List + empty states |
+| rigger-job-detail-page | ✅ passing | Sticky action button |
+| rigger-profile-page | ✅ passing | Team info + stats |
+
+---
 
 ## Critical Information for Next Session
 
-### JWT Flow - NOW WORKING
+### Architecture - Role System
 ```
-Clerk publicMetadata → JWT template exposes as `metadata` → Convex reads from identity → Syncs to users table
+Clerk publicMetadata → JWT claims → Convex auth helpers → Query/Mutation filtering
+                                  ↓
+                          useRole() hook → Conditional UI rendering
 ```
 
-### Verified Working Configuration
-- **Clerk Domain**: `humble-magpie-34.clerk.accounts.dev`
-- **JWT Template Name**: `convex`
-- **JWT Template Claims**: `{"metadata": "{{user.public_metadata}}"}`
-- **User ID**: `user_35cXgAhN6wi23wB09eIoReKe5Lq`
-- **User Role**: `office` (set in both Clerk and Convex)
+### Key Files
+- `types/roles.ts` - Route access config, role types, landing pages
+- `hooks/useRole.ts` - Client-side role hook
+- `convex/lib/auth.ts` - Server-side: getUserRole(), getUserTeamId()
+- `middleware.ts` - Role-based route redirects
+- `components/AuthenticatedLayout.tsx` - Conditional layout per role
+
+### Mutation Parameter
+**IMPORTANT**: Use `newStatus` not `status` when calling `updateJobStatus`:
+```typescript
+await updateStatus({
+  jobId: job._id,
+  newStatus: "in_progress", // NOT "status"
+  expectedVersion: job.version,
+});
+```
+
+---
+
+## Pre-existing Issues (Not From This Session)
+
+TypeScript errors - mismatch `waiting_for_scaffolder` vs `waiting_for_scaffolders`:
+- `app/jobs/[id]/page.tsx:116`
+- `components/JobCard.tsx:61,91`
+- `components/StatusDropdown.tsx:117`
+
+---
 
 ## Commands for Next Session
 
@@ -89,29 +139,45 @@ Clerk publicMetadata → JWT template exposes as `metadata` → Convex reads fro
 # Navigate to project
 cd /Users/ramunasnognys/Developer/workspace/prompt-improver/rigger-jobs
 
+# Check status
+git status
+git log --oneline -10
+
 # Start dev server
-pnpm dev
+npm run dev
 
-# Verify JWT still working
-# Visit http://localhost:3000/debug
-
-# After done with debug:
-rm app/debug/page.tsx convex/debug.ts
+# Push to remote when ready
+git push origin main
 ```
+
+---
+
+## Testing Checklist
+
+- [ ] Create rigger invitation (office user on /admin/teams)
+- [ ] New user accepts invite via QR code
+- [ ] Verify rigger redirects to /my-jobs
+- [ ] Verify rigger sees only team's jobs
+- [ ] Test START button on "new" job
+- [ ] Test COMPLETE button on "in_progress" job
+- [ ] Verify profile shows team info
+- [ ] Verify today's stats in profile
+- [ ] Test sign out from rigger profile
+
+---
 
 ## Next Steps (Priority Order)
 
-1. **Test QR invitation e2e** - Generate QR, new user signs up, verify role=rigger assigned
-2. **Mark qr-invitation-system as passing** - After e2e test
-3. **Start Phase 2: Convex Authorization**
-   - Update listJobs with role filtering
-   - Riggers see only their team's jobs
-   - Office/admin see all jobs
-4. **Delete debug files** - After confident auth works
+1. **Push changes** - `git push origin main` in rigger-jobs
+2. **Test with real rigger account** - Create invite, new user accepts
+3. **Delete debug files** - `app/debug/page.tsx`, `convex/debug.ts`
+4. **Phase 4: Admin user management** (if needed)
+
+---
 
 ## Reference Files
 
-- `features.json` - Feature tracking (per CLAUDE.md protocol)
-- `progress.md` - Session progress notes
-- `types/roles.ts` - Role types, ROUTE_ACCESS, LANDING_PAGES
-- `docs/my-jobs-feature.md` - Full implementation guide
+- `dev/active/rigger-role-implementation/rigger-role-implementation-tasks.md` - Task checklist
+- `dev/active/rigger-role-implementation/ASCII-Layout-Specifications.md` - UI specs
+- `rigger-jobs/features.json` - Feature tracking
+- `rigger-jobs/docs/my-jobs-feature.md` - Full implementation guide
