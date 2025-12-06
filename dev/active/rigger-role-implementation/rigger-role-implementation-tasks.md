@@ -1,7 +1,7 @@
 # Rigger Role Implementation - Tasks
 
-**Last Updated**: 2025-12-06 05:50 UTC
-**Status**: Phase 1.0-1.5 COMPLETE, JWT VERIFIED WORKING
+**Last Updated**: 2025-12-06 08:30 UTC
+**Status**: Phase 3 COMPLETE - Rigger mobile interface done
 
 ---
 
@@ -75,37 +75,45 @@
 
 ---
 
-## Phase 2: Convex Authorization (Next Priority)
+## Phase 2: Convex Authorization ✅ COMPLETE
 
 ### 2.1 Auth Helpers ✅
 Already created in `convex/lib/auth.ts`
 
-### 2.2 Update Job Queries
-- [ ] Update `convex/jobs.ts` listJobs with role filtering
-- [ ] Filter by teamId for riggers
-- [ ] Office/admin see all jobs
-- [ ] Add getJobById with access check
+### 2.2 Update Job Queries ✅
+- [x] Update `convex/jobs.ts` listJobs with role filtering
+- [x] Filter by teamId for riggers
+- [x] Office/admin see all jobs
+- [x] Add getJob with access check
+- [x] Update searchJobs with role filtering
 
-### 2.3 Update Job Mutations
-- [ ] Update updateJobStatus with team check for riggers
-- [ ] Add photo upload protection for riggers
-- [ ] Ensure riggers can only update their team's jobs
+### 2.3 Update Job Mutations ✅
+- [x] Update updateJobStatus with team check for riggers
+- [x] Update updateDelayReason with team check
+- [x] Add photo upload protection (addPhotosToJob, addPhotosFromQueue)
+- [x] Block riggers from assignTeam/unassignTeam
 
-### 2.4 Team Deletion Protection
-- [ ] Block deletion if riggers assigned to team
+### 2.4 Team Deletion Protection ✅
+- [x] Block deletion if riggers assigned to team
 
 ---
 
-## Phase 3: Rigger Mobile Interface (Not Started)
+## Phase 3: Rigger Mobile Interface ✅ COMPLETE
 
-- [ ] BottomNavigation component
-- [ ] MobileHeader component
-- [ ] TeamBanner component
-- [ ] StatusTabs component
-- [ ] JobCard component (rigger version)
-- [ ] My Jobs page
-- [ ] Job detail page
-- [ ] Profile page
+### 3.1 Rigger Components ✅
+- [x] `components/rigger/RiggerBottomNav.tsx` - 2-item nav (My Jobs, Profile)
+- [x] `components/rigger/TeamBanner.tsx` - Team info with member count
+- [x] `components/rigger/RiggerStatusTabs.tsx` - TO DO | IN PROGRESS | DELAYED
+- [x] `components/rigger/RiggerJobCard.tsx` - Action-focused job card with START/COMPLETE buttons
+
+### 3.2 Rigger Pages ✅
+- [x] `app/my-jobs/page.tsx` - Main job list with status tabs and empty states
+- [x] `app/my-jobs/[id]/page.tsx` - Job detail with sticky action button
+- [x] `app/profile/page.tsx` - Updated with rigger-specific view (team info, stats)
+
+### 3.3 Layout Integration ✅
+- [x] `components/AuthenticatedLayout.tsx` - Conditional nav for riggers (no sidebar)
+- [x] `convex/users.ts` - Added `getCurrentUserWithTeam` query
 
 ---
 
@@ -125,15 +133,26 @@ Already created in `convex/lib/auth.ts`
 | `convex/debug.ts` | ✅ TEMP | JWT verification query |
 | `convex/migrations/backfillRoles.ts` | ✅ | Migration script |
 | `convex/invitations.ts` | ✅ | QR invitation mutations |
+| `convex/users.ts` | ✅ | Added getCurrentUserWithTeam |
 | `app/debug/page.tsx` | ✅ TEMP | JWT debug UI |
 | `app/invite/[token]/page.tsx` | ✅ | Invitation page |
+| `app/my-jobs/page.tsx` | ✅ NEW | Rigger job list |
+| `app/my-jobs/[id]/page.tsx` | ✅ NEW | Rigger job detail |
+| `app/profile/page.tsx` | ✅ UPDATED | Role-based profile views |
 | `app/api/accept-invite/route.ts` | ✅ | Accept invite API |
-| `app/api/set-role/route.ts` | ✅ NEW | Set user role API |
+| `app/api/set-role/route.ts` | ✅ | Set user role API |
+| `components/rigger/RiggerBottomNav.tsx` | ✅ NEW | Rigger bottom nav |
+| `components/rigger/TeamBanner.tsx` | ✅ NEW | Team info banner |
+| `components/rigger/RiggerStatusTabs.tsx` | ✅ NEW | Status filter tabs |
+| `components/rigger/RiggerJobCard.tsx` | ✅ NEW | Action-focused job card |
+| `components/AuthenticatedLayout.tsx` | ✅ UPDATED | Conditional rigger layout |
 | `components/InviteRiggerDialog.tsx` | ✅ | QR code dialog |
 | `lib/roles.ts` | ✅ | Server role helpers |
 | `hooks/useRole.ts` | ✅ | Client role hook |
 | `middleware.ts` | ✅ | Role-based redirects |
 | `convex/auth.config.ts` | ✅ | Updated Clerk domain |
+| `convex/jobs.ts` | ✅ | Role-based query/mutation filtering |
+| `convex/teams.ts` | ✅ | Rigger deletion protection |
 
 ---
 
@@ -152,7 +171,44 @@ Already created in `convex/lib/auth.ts`
 
 ## Next Session Actions
 
-1. ~~Verify JWT claims~~ ✅ DONE
-2. **Test QR invitation e2e** - Create invite, new user signs up as rigger
-3. **Start Phase 2** - Convex authorization (team-based job filtering)
-4. **Delete debug files** when confident auth works
+1. **Test QR invitation e2e** - Create invite, new user signs up as rigger
+2. **Test rigger mobile interface** - Verify job list, actions, profile work
+3. **Delete debug files** when confident auth works
+4. **Start Phase 4** - Admin user management
+
+---
+
+## Session Handoff (2025-12-06 08:30 UTC)
+
+### This Session Completed
+- Phase 3.1: Created all rigger UI components
+- Phase 3.2: Created my-jobs pages (list + detail)
+- Phase 3.3: Updated profile page with role-based views
+- Phase 3.4: Integrated rigger layout in AuthenticatedLayout
+
+### Files Created
+- `components/rigger/RiggerBottomNav.tsx`
+- `components/rigger/TeamBanner.tsx`
+- `components/rigger/RiggerStatusTabs.tsx`
+- `components/rigger/RiggerJobCard.tsx`
+- `app/my-jobs/page.tsx`
+- `app/my-jobs/[id]/page.tsx`
+
+### Files Modified
+- `components/AuthenticatedLayout.tsx` - Added rigger layout branch
+- `app/profile/page.tsx` - Added RiggerProfilePage component
+- `convex/users.ts` - Added getCurrentUserWithTeam query
+
+### Key Features Implemented
+- 3-tab status filter (TO DO, IN PROGRESS, DELAYED)
+- Action buttons: START (new jobs), MARK COMPLETE (in_progress/delayed)
+- Team banner showing team name, member count, active jobs
+- Rigger profile with team info and today's stats
+- Empty states for no jobs / all done
+- Sticky action button on detail page
+
+### No TypeScript Errors in New Files
+Pre-existing type mismatch in scaffolder naming (not from this session)
+
+### Next Priority
+Test the rigger interface with a real rigger user account
