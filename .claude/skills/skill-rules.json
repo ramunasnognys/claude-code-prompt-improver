@@ -1,0 +1,413 @@
+{
+    "version": "1.0",
+    "description": "Skill activation triggers for Claude Code. Controls when skills automatically suggest or block actions.",
+    "skills": {
+        "skill-developer": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Meta-skill for creating and managing Claude Code skills",
+            "promptTriggers": {
+                "keywords": [
+                    "skill system",
+                    "create skill",
+                    "add skill",
+                    "skill triggers",
+                    "skill rules",
+                    "hook system",
+                    "skill development",
+                    "skill-rules.json"
+                ],
+                "intentPatterns": [
+                    "(how do|how does|explain).*?skill",
+                    "(create|add|modify|build).*?skill",
+                    "skill.*?(work|trigger|activate|system)"
+                ]
+            }
+        },
+        "backend-dev-guidelines": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Backend development patterns for Node.js/Express/TypeScript",
+            "promptTriggers": {
+                "keywords": [
+                    "backend",
+                    "backend development",
+                    "microservice",
+                    "controller",
+                    "service",
+                    "repository",
+                    "route",
+                    "routing",
+                    "express",
+                    "API",
+                    "endpoint",
+                    "middleware",
+                    "validation",
+                    "Zod",
+                    "Prisma",
+                    "database access",
+                    "BaseController",
+                    "dependency injection",
+                    "unifiedConfig",
+                    "configuration"
+                ],
+                "intentPatterns": [
+                    "(create|add|implement|build).*?(route|endpoint|API|controller|service|repository)",
+                    "(fix|handle|debug).*?(error|exception|backend)",
+                    "(add|implement).*?(middleware|validation|error.*?handling)",
+                    "(organize|structure|refactor).*?(backend|service|API)",
+                    "(how to|best practice).*?(backend|route|controller|service)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "src/**/*.ts",
+                    "backend/**/*.ts",
+                    "api/**/*.ts",
+                    "server/**/*.ts",
+                    "services/**/*.ts",
+                    "SaaS/backend/**/*.ts",
+                    "SaaS/api/**/*.ts"
+                ],
+                "pathExclusions": [
+                    "**/*.test.ts",
+                    "**/*.spec.ts"
+                ],
+                "contentPatterns": [
+                    "router\\.",
+                    "app\\.(get|post|put|delete|patch)",
+                    "export.*Controller",
+                    "export.*Service",
+                    "prisma\\."
+                ]
+            }
+        },
+        "frontend-dev-guidelines": {
+            "type": "guardrail",
+            "enforcement": "block",
+            "priority": "high",
+            "description": "React/TypeScript best practices including MUI v7 compatibility",
+            "promptTriggers": {
+                "keywords": [
+                    "component",
+                    "react component",
+                    "UI",
+                    "interface",
+                    "page",
+                    "modal",
+                    "dialog",
+                    "form",
+                    "MUI",
+                    "Material-UI",
+                    "Grid",
+                    "styling",
+                    "frontend",
+                    "React"
+                ],
+                "intentPatterns": [
+                    "(create|add|make|build|update|modify|edit).*?(component|UI|page|modal|dialog|form)",
+                    "(how to|best practice).*?(component|react|MUI)",
+                    "(style|design|layout).*?(component|UI)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "src/**/*.tsx",
+                    "src/**/*.ts",
+                    "frontend/**/*.tsx",
+                    "frontend/**/*.ts",
+                    "client/**/*.tsx",
+                    "client/**/*.ts",
+                    "SaaS/src/**/*.tsx",
+                    "SaaS/components/**/*.tsx"
+                ],
+                "pathExclusions": [
+                    "**/*.test.tsx",
+                    "**/*.test.ts",
+                    "**/*.spec.tsx",
+                    "**/*.spec.ts",
+                    "**/*.styles.ts",
+                    "**/vite.config.ts",
+                    "**/tsconfig.json"
+                ],
+                "contentPatterns": [
+                    "from '@mui/material';",
+                    "import.*Grid.*from.*@mui",
+                    "<Grid ",
+                    "Grid2",
+                    "Unstable_Grid",
+                    "makeStyles",
+                    "@material-ui/core"
+                ]
+            },
+            "blockMessage": "⚠️ BLOCKED - Frontend Best Practices Required\n\n📋 REQUIRED ACTION:\n1. Use Skill tool: 'frontend-dev-guidelines'\n2. Review MUI v7 patterns (Grid uses size={{}} prop, NOT xs/sm props)\n3. Check React/TypeScript best practices\n4. Use proper styling patterns\n5. Then retry this edit\n\nReason: Enforce MUI v7 compatibility and React best practices\nFile: {file_path}\n\n💡 TIP: Add '// @skip-validation' comment to skip future checks",
+            "skipConditions": {
+                "sessionSkillUsed": true,
+                "fileMarkers": [
+                    "@skip-validation"
+                ],
+                "envOverride": "SKIP_FRONTEND_GUIDELINES"
+            }
+        },
+        "route-tester": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Testing authenticated API routes with JWT cookie-based auth",
+            "promptTriggers": {
+                "keywords": [
+                    "test route",
+                    "test endpoint",
+                    "test API",
+                    "route testing",
+                    "API testing",
+                    "authenticated route",
+                    "JWT testing",
+                    "cookie auth",
+                    "test with auth"
+                ],
+                "intentPatterns": [
+                    "(test|debug|verify).*?(route|endpoint|API)",
+                    "(how to|how do I).*?test.*?(route|endpoint|API)",
+                    "test.*?(authenticated|auth|JWT|cookie)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/routes/**/*.ts",
+                    "**/test-*.js",
+                    "**/test-*.ts"
+                ],
+                "contentPatterns": [
+                    "router\\.(get|post|put|delete|patch)",
+                    "app\\.(get|post|put|delete|patch)"
+                ]
+            }
+        },
+        "error-tracking": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "Sentry error tracking and performance monitoring patterns",
+            "promptTriggers": {
+                "keywords": [
+                    "error handling",
+                    "exception",
+                    "sentry",
+                    "error tracking",
+                    "captureException",
+                    "monitoring",
+                    "performance tracking"
+                ],
+                "intentPatterns": [
+                    "(add|create|implement|setup).*?(error handling|sentry|error tracking)",
+                    "(fix|handle|catch).*?(error|exception)",
+                    "(how to|best practice).*?(error|sentry|monitoring)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/instrument.ts",
+                    "**/sentry*.ts",
+                    "**/*Controller.ts",
+                    "**/*Service.ts"
+                ],
+                "contentPatterns": [
+                    "@sentry",
+                    "Sentry\\.",
+                    "captureException",
+                    "captureMessage"
+                ]
+            }
+        },
+        "ui-ux-refinement": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "UI/UX polish and refinement for existing codebases",
+            "promptTriggers": {
+                "keywords": [
+                    "UI polish",
+                    "UX improvement",
+                    "UI/UX",
+                    "user experience",
+                    "visual polish",
+                    "user flow",
+                    "interaction design",
+                    "missing states",
+                    "loading state",
+                    "empty state",
+                    "error state",
+                    "hover state",
+                    "transitions",
+                    "animations",
+                    "spacing issues",
+                    "layout shift",
+                    "visual hierarchy",
+                    "polish",
+                    "refine UI",
+                    "improve UX",
+                    "audit UI",
+                    "review UX"
+                ],
+                "intentPatterns": [
+                    "(improve|polish|refine|audit|review).*?(UI|UX|user.*?experience|interface)",
+                    "(add|fix|implement).*?(loading|empty|error|hover|disabled).*?state",
+                    "(fix|improve).*?(spacing|layout|visual|hierarchy)",
+                    "(add|implement).*?(transitions|animations)",
+                    "(make|improve).*?(more polished|production.*?ready)",
+                    "(review|audit).*?(user.*?flow|interaction)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/*.tsx",
+                    "**/components/**/*.tsx",
+                    "**/app/**/*.tsx",
+                    "**/pages/**/*.tsx"
+                ],
+                "pathExclusions": [
+                    "**/*.test.tsx",
+                    "**/*.spec.tsx"
+                ]
+            }
+        },
+        "seo-specialist": {
+            "type": "domain",
+            "enforcement": "suggest",
+            "priority": "high",
+            "description": "SEO optimization including meta tags, Open Graph, structured data, sitemaps",
+            "promptTriggers": {
+                "keywords": [
+                    "SEO",
+                    "meta tags",
+                    "meta description",
+                    "Open Graph",
+                    "OG tags",
+                    "Twitter cards",
+                    "structured data",
+                    "schema.org",
+                    "JSON-LD",
+                    "sitemap",
+                    "robots.txt",
+                    "canonical URL",
+                    "canonical tag",
+                    "search engine",
+                    "search optimization",
+                    "social sharing",
+                    "Core Web Vitals",
+                    "page speed",
+                    "mobile optimization",
+                    "image alt text",
+                    "semantic HTML"
+                ],
+                "intentPatterns": [
+                    "(add|create|implement|setup).*?(SEO|meta.*?tags|Open Graph|structured data|sitemap)",
+                    "(optimize|improve).*?(SEO|search|ranking|visibility)",
+                    "(how to|best practice).*?(SEO|meta|Open Graph|schema)",
+                    "(add|implement).*?(canonical|robots.txt|Twitter.*?card)",
+                    "(improve|optimize).*?(page.*?speed|performance|Core.*?Web.*?Vitals)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/_app.tsx",
+                    "**/_document.tsx",
+                    "**/pages/**/*.tsx",
+                    "**/app/**/*.tsx",
+                    "**/layout.tsx",
+                    "**/head.tsx",
+                    "**/sitemap.xml.ts",
+                    "**/robots.txt.ts"
+                ],
+                "contentPatterns": [
+                    "<Head>",
+                    "next/head",
+                    "property=\"og:",
+                    "name=\"twitter:",
+                    "application/ld\\+json",
+                    "schema\\.org",
+                    "rel=\"canonical\""
+                ]
+            }
+        },
+        "frontend-improve": {
+            "type": "guardrail",
+            "enforcement": "block",
+            "priority": "high",
+            "description": "Visual design quality for distinctive frontends - avoids AI slop aesthetics",
+            "promptTriggers": {
+                "keywords": [
+                    "landing page",
+                    "hero section",
+                    "design",
+                    "aesthetics",
+                    "beautiful",
+                    "creative",
+                    "distinctive",
+                    "polish",
+                    "typography",
+                    "color palette",
+                    "theme",
+                    "animations",
+                    "visual design",
+                    "UI design",
+                    "design system",
+                    "unique design",
+                    "creative frontend"
+                ],
+                "intentPatterns": [
+                    "(create|build|make|design).*?(landing|page|hero|UI|website)",
+                    "(beautiful|creative|distinctive|polished).*?(design|UI|frontend)",
+                    "(improve|enhance|polish).*?(design|aesthetics|visual)"
+                ]
+            },
+            "fileTriggers": {
+                "pathPatterns": [
+                    "**/pages/**/*.tsx",
+                    "**/landing/**/*.tsx",
+                    "**/hero/**/*.tsx",
+                    "**/app/**/page.tsx"
+                ],
+                "pathExclusions": [
+                    "**/*.test.*",
+                    "**/*.spec.*"
+                ],
+                "contentPatterns": [
+                    "font-family:",
+                    "background:",
+                    "animation:",
+                    "@keyframes"
+                ]
+            },
+            "blockMessage": "⚠️ BLOCKED - Frontend Design Quality Required\n\n📋 REQUIRED ACTION:\n1. Use Skill tool: 'frontend-improve'\n2. Review typography choices (avoid Inter, Roboto)\n3. Check color/theme patterns (avoid purple gradients)\n4. Consider motion and backgrounds\n5. Then retry this edit\n\nReason: Ensure distinctive design, avoid generic AI aesthetics\nFile: {file_path}\n\n💡 TIP: Add '// @skip-validation' comment to skip future checks",
+            "skipConditions": {
+                "sessionSkillUsed": true,
+                "fileMarkers": [
+                    "@skip-validation"
+                ],
+                "envOverride": "SKIP_FRONTEND_IMPROVE"
+            }
+        }
+    },
+    "notes": {
+        "enforcement_types": {
+            "suggest": "Skill suggestion appears but doesn't block execution",
+            "block": "Requires skill to be used before proceeding (guardrail)",
+            "warn": "Shows warning but allows proceeding"
+        },
+        "priority_levels": {
+            "critical": "Highest - Always trigger when matched",
+            "high": "Important - Trigger for most matches",
+            "medium": "Moderate - Trigger for clear matches",
+            "low": "Optional - Trigger only for explicit matches"
+        },
+        "customization": {
+            "pathPatterns": "Adjust to match your project structure (blog-api, auth-service, etc.)",
+            "keywords": "Add domain-specific terms relevant to your project",
+            "intentPatterns": "Use regex for flexible user intent matching"
+        }
+    }
+}
